@@ -1,0 +1,19 @@
+name: 'Terraform-Lint'
+author: 'Demian Ginther'
+description: 'Validates Terraform syntax'
+inputs:
+  github_token:
+    description: 'Github Token to use for private modules'
+    required: false
+  aws_region:
+    description: 'AWS Region'
+    required: true
+runs:
+  using: 'docker'
+  image: 'Dockerfile'
+  env:
+    GH_TOKEN: ${{ inputs.github_token }}
+    AWS_DEFAULT_REGION: ${{ inputs.aws_region }}
+branding:
+  icon: 'loader'
+  color: 'green'

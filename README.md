@@ -1,1 +1,1 @@
-# vsp-github-actions
+# github-actions
