@@ -10,7 +10,6 @@ RUN chmod a+x /tmp/install-certs.sh && /tmp/install-certs.sh
 
 COPY . .
 
-RUN pip config set global.cert /usr/local/share/ca-certificates/VA-Internal-S2-RCA1-v1.cer.crt
 RUN pip install -r requirements.txt
 
 RUN chmod +x /entrypoint.py
