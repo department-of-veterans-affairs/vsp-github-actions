@@ -23,7 +23,7 @@ jobs:
         env_variable_name: SLACK_BOT_TOKEN
 
     - name: slack notify
-      uses: ./
+      uses: ./slack-socket
       with:
         slack_app_token: ${{ env.SLACK_APP_TOKEN }}
         slack_bot_token: ${{ env.SLACK_BOT_TOKEN }}
@@ -50,7 +50,7 @@ jobs:
           env_variable_name: SLACK_BOT_TOKEN
 
       - name: slack notify
-        uses: ./.github/actions/vsp-github-actions/slack-socket
+        uses: ./slack-socket
         with:
           slack_app_token: ${{ env.SLACK_APP_TOKEN }}
           slack_bot_token: ${{ env.SLACK_BOT_TOKEN }}
@@ -84,7 +84,7 @@ jobs:
             env_variable_name: SLACK_BOT_TOKEN
 
         - name: slack notify
-          uses: ./.github/actions/vsp-github-actions/slack-socket
+          uses: ./slack-socket
           with:
             slack_app_token: ${{ env.SLACK_APP_TOKEN }}
             slack_bot_token: ${{ env.SLACK_BOT_TOKEN }}
