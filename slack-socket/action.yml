@@ -14,12 +14,14 @@ inputs:
   blocks:
     description: 'A JSON array of structured blocks, presented as a URL-encoded string.'
     required: false
+    default: ''
   channel_id:
     description: 'Channel ID to send to'
     required: true
   attachments:
     description: 'A JSON-based array of structured attachments, presented as a URL-encoded string.'
     required: false
+    default: ''
 runs:
   using: 'docker'
   image: 'Dockerfile'
