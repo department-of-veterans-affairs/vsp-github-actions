@@ -10,9 +10,14 @@ app = App(token=os.environ["SLACK_BOT_TOKEN"])
 
 SocketModeHandler(app, os.environ["SLACK_APP_TOKEN"]).connect()
 
-app.client.chat_postMessage(token=os.environ["SLACK_BOT_TOKEN"],
-                            channel=os.environ["CHANNEL_ID"],
-                            text=os.environ["MESSAGE"],
-                            blocks=os.environ["BLOCKS"],
-                            attachments=os.environ["ATTACHMENTS"])
+if os.environ["BLOCKS"] or os.environ["ATTACHMENTS"]:
+    app.client.chat_postMessage(token=os.environ["SLACK_BOT_TOKEN"],
+                                channel=os.environ["CHANNEL_ID"],
+                                text=os.environ["MESSAGE"],
+                                blocks=os.environ["BLOCKS"],
+                                attachments=os.environ["ATTACHMENTS"])
+else:
+    app.client.chat_postMessage(token=os.environ["SLACK_BOT_TOKEN"],
+                                channel=os.environ["CHANNEL_ID"],
+                                text=os.environ["MESSAGE"])
 SocketModeHandler(app, os.environ["SLACK_APP_TOKEN"]).close()
