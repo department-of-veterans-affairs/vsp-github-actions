@@ -16,13 +16,18 @@ SocketModeHandler(app, os.environ["SLACK_APP_TOKEN"]).connect()
 #                                 text=os.environ["MESSAGE"],
 #                                 blocks=os.environ["BLOCKS"],
 #                                 attachments=os.environ["ATTACHMENTS"])
-if os.environ["BLOCKS"]:
-    app.client.chat_postMessage(token=os.environ["SLACK_BOT_TOKEN"],
-                                channel=os.environ["CHANNEL_ID"],
-                                text=os.environ["MESSAGE"],
-                                blocks=os.environ["BLOCKS"])
-else:
-    app.client.chat_postMessage(token=os.environ["SLACK_BOT_TOKEN"],
-                                channel=os.environ["CHANNEL_ID"],
-                                text=os.environ["MESSAGE"])
+# if os.environ["BLOCKS"]:
+#     app.client.chat_postMessage(token=os.environ["SLACK_BOT_TOKEN"],
+#                                 channel=os.environ["CHANNEL_ID"],
+#                                 text=os.environ["MESSAGE"],
+#                                 blocks=os.environ["BLOCKS"])
+# else:
+#     app.client.chat_postMessage(token=os.environ["SLACK_BOT_TOKEN"],
+#                                 channel=os.environ["CHANNEL_ID"],
+#                                 text=os.environ["MESSAGE"])
+app.client.chat_postMessage(token=os.environ["SLACK_BOT_TOKEN"],
+                            channel=os.environ["CHANNEL_ID"],
+                            blocks=os.environ["BLOCKS"],
+                            text=os.environ["MESSAGE"])
+
 SocketModeHandler(app, os.environ["SLACK_APP_TOKEN"]).close()
