@@ -68,36 +68,36 @@ jobs:
           blocks: "[{\"type\": \"section\", \"text\": {\"type\": \"plain_text\", \"text\": \"Test block!\"}}]"
           channel_id: "U01SPJ10WBC"
 
-  # test-blocks-attachments:
-  #   name: Test attachments w/ message & blocks
-  #   runs-on: ubuntu-latest
-  #   steps:
-  #     - name: Checkout
-  #       uses: actions/checkout@v2
+  test-blocks-attachments:
+    name: Test attachments w/ message & blocks
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v2
 
-  #     - name: Configure AWS Credentials
-  #       uses: aws-actions/configure-aws-credentials@v1
-  #       with:
-  #         aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
-  #         aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-  #         aws-region: "us-gov-west-1"
+      - name: Configure AWS Credentials
+        uses: aws-actions/configure-aws-credentials@v1
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: "us-gov-west-1"
 
-  #     - uses: marvinpinto/action-inject-ssm-secrets@v1.1.1
-  #       with:
-  #         ssm_parameter: /devops/github_actions_slack_socket_token
-  #         env_variable_name: SLACK_APP_TOKEN
+      - uses: marvinpinto/action-inject-ssm-secrets@v1.1.1
+        with:
+          ssm_parameter: /devops/github_actions_slack_socket_token
+          env_variable_name: SLACK_APP_TOKEN
 
-  #     - uses: marvinpinto/action-inject-ssm-secrets@v1.1.1
-  #       with:
-  #         ssm_parameter: /devops/github_actions_slack_bot_user_token
-  #         env_variable_name: SLACK_BOT_TOKEN
+      - uses: marvinpinto/action-inject-ssm-secrets@v1.1.1
+        with:
+          ssm_parameter: /devops/github_actions_slack_bot_user_token
+          env_variable_name: SLACK_BOT_TOKEN
 
-  #     - name: slack notify
-  #       uses: ./slack-socket
-  #       with:
-  #         slack_app_token: ${{ env.SLACK_APP_TOKEN }}
-  #         slack_bot_token: ${{ env.SLACK_BOT_TOKEN }}
-  #         attachments: "[{\"pretext\": \"pre-hello\", \"text\": \"text-world\"}]"
-  #         message: "This is the test for test-blocks-attachment!"
-  #         blocks: "[{\"type\": \"section\", \"text\": {\"type\": \"plain_text\", \"text\": \"Test block attachment!\"}}]"
-  #         channel_id: "U01SPJ10WBC"
+      - name: slack notify
+        uses: ./slack-socket
+        with:
+          slack_app_token: ${{ env.SLACK_APP_TOKEN }}
+          slack_bot_token: ${{ env.SLACK_BOT_TOKEN }}
+          attachments: "[{\"pretext\": \"pre-hello\", \"text\": \"text-world\"}]"
+          message: "This is the test for test-blocks-attachment!"
+          blocks: "[{\"type\": \"section\", \"text\": {\"type\": \"plain_text\", \"text\": \"Test block attachment!\"}}]"
+          channel_id: "U01SPJ10WBC"
