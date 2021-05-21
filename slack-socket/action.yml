@@ -20,7 +20,6 @@ inputs:
   attachments:
     description: 'A JSON-based array of structured attachments, presented as a URL-encoded string.'
     required: false
-    default: ''
 runs:
   using: 'docker'
   image: 'Dockerfile'
