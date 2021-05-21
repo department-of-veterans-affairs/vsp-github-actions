@@ -102,7 +102,7 @@ jobs:
           blocks: "[{\"type\": \"section\", \"text\": {\"type\": \"plain_text\", \"text\": \"Test block attachment!\"}}]"
           channel_id: "U01SPJ10WBC"
 
-  test-blocks-attachments:
+  test-message-attachments:
     name: Test attachments w/ message & no blocks
     runs-on: ubuntu-latest
     steps:
