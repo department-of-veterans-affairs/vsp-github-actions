@@ -36,7 +36,7 @@ jobs:
           channel_id: "U01SPJ10WBC"
 
   test-blocks:
-    name: Test block w/ no message
+    name: Test block w/ message
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
