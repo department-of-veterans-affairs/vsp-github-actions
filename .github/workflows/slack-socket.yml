@@ -33,7 +33,7 @@ jobs:
           slack_app_token: ${{ env.SLACK_APP_TOKEN }}
           slack_bot_token: ${{ env.SLACK_BOT_TOKEN }}
           message: "This is the test for message!"
-          channel_id: "C37M86Y8G"
+          channel_id: "U01SPJ10WBC"
 
   test-blocks:
     name: Test block w/ no message
@@ -73,7 +73,7 @@ jobs:
                 }, \
               {\"type\": \"divider\"} \
             ]"
-          channel_id: "C37M86Y8G"
+          channel_id: "U01SPJ10WBC"
 
   test-blocks-attachments:
     name: Test attachments w/ message & blocks
@@ -114,7 +114,7 @@ jobs:
                 }, \
               {\"type\": \"divider\"} \
             ]"
-          channel_id: "C37M86Y8G"
+          channel_id: "U01SPJ10WBC"
 
 
   test-attachments:
@@ -148,4 +148,4 @@ jobs:
           slack_bot_token: ${{ env.SLACK_BOT_TOKEN }}
           attachments: '[{"pretext": "pre-hello", "text": "text-world"}]'
           message: "This is the test for test-attachment!"
-          channel_id: "C37M86Y8G"
+          channel_id: "U01SPJ10WBC"
