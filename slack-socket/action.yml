@@ -17,6 +17,10 @@ inputs:
   channel_id:
     description: 'Channel ID to send to'
     required: true
+  attachments:
+    description: 'A JSON-based array of structured attachments, presented as a URL-encoded string.'
+    required: false
+    default: ''
 runs:
   using: 'docker'
   image: 'Dockerfile'
@@ -26,6 +30,7 @@ runs:
     MESSAGE: ${{ inputs.message }}
     BLOCKS: ${{ inputs.blocks }}
     CHANNEL_ID: ${{ inputs.channel_id }}
+    ATTACHMENTS: ${{ inputs.attachments }}
 branding:
   icon: 'loader'
   color: 'green'

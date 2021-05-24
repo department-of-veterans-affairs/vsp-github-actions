@@ -24,6 +24,10 @@ The channel ID you wish to send your message to
 **Not Required**
 A JSON string which represents the Slack Blocks you wish to send
 
+### `attachments`
+**Not Required**
+A JSON string which represents the Slack Attachments you wish to send
+
 ## Example usage
 ```
 uses: dginther/github-actions/slack-socket
@@ -35,4 +39,3 @@ with:
   channel_id: "XXXXXXX"
 ```
 NOTE: Please note the escaped double quotes in the JSON string. If you choose to include "blocks", the received message will use the text in "message" as a fallback.
-

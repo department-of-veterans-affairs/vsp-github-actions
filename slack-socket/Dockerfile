@@ -1,7 +1,7 @@
 FROM python:3.9-slim-buster
 
 RUN apt-get update && \
-    apt-get upgrade && \
+    apt-get upgrade -y && \
     apt-get install -y curl ca-certificates
 
 ENV ADDITIONAL_CA_CERTS=/ca-certificates
