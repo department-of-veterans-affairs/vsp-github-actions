@@ -1,4 +1,4 @@
-FROM python:3.9-slim-buster
+FROM public.ecr.aws/bitnami/python:3.9
 
 RUN apt-get update && \
     apt-get upgrade -y && \
@@ -12,6 +12,6 @@ COPY . .
 RUN pip config set global.cert /etc/ssl/certs/ca-certificates.crt
 RUN pip install -r requirements.txt
 
-RUN chmod +x /entrypoint.py
+RUN chmod +x /app/entrypoint.py
 
-ENTRYPOINT ["python", "/entrypoint.py"]
+ENTRYPOINT ["python", "/app/entrypoint.py"]
