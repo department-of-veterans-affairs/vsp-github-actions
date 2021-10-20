@@ -30,7 +30,7 @@ A JSON string which represents the Slack Attachments you wish to send
 
 ## Example usage
 ```
-uses: dginther/github-actions/slack-socket
+uses: department-of-veterans-affairs/vsp-github-actions/slack-socket
 with:
   slack_app_token: "xapp-xxxxx"
   slack_bot_token: "xoxb-xxxxx"
