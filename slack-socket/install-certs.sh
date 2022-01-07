@@ -25,7 +25,7 @@ for CERT in ${CA_CERTS[@]}
 do
   echo "Installing $CERT"
   OUT=$ADDITIONAL_CA_CERTS/${CERT##*/}
-  test 200 == "$(curl --retry 20 --retry-all-errors --fail -sw %{http_code} $CERT -o $OUT)"
+  test 200 == "$(curl -sw %{http_code} $CERT -o $OUT)"
 done
 for cert in $(find $ADDITIONAL_CA_CERTS -type f -name "*.cer")
   do
