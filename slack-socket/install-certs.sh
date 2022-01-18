@@ -9,13 +9,13 @@ export ADDITIONAL_CA_CERTS="/usr/local/share/ca-certificates"
 # files in $ADDITIONAL_CA_CERTS to install.
 #
 CA_CERTS=(
-  http://aia.pki.va.gov/PKI/AIA/VA/VA-Internal-S2-RCA1-v1.cer
-  http://aia.pki.va.gov/PKI/AIA/VA/VA-Internal-S2-ICA4.cer
-  http://aia.pki.va.gov/PKI/AIA/VA/VA-Internal-S2-ICA5.cer
-  http://aia.pki.va.gov/PKI/AIA/VA/VA-Internal-S2-ICA6.cer
-  http://aia.pki.va.gov/PKI/AIA/VA/VA-Internal-S2-ICA7.cer
-  http://aia.pki.va.gov/PKI/AIA/VA/VA-Internal-S2-ICA8.cer
-  http://aia.pki.va.gov/PKI/AIA/VA/VA-Internal-S2-ICA9.cer
+  https://github.com/department-of-veterans-affairs/platform-va-ca-certificate/blob/main/VA-Internal-S2-RCA1-v1.cer?raw=true
+  https://github.com/department-of-veterans-affairs/platform-va-ca-certificate/blob/main/VA-Internal-S2-ICA4.cer?raw=true
+  https://github.com/department-of-veterans-affairs/platform-va-ca-certificate/blob/main/VA-Internal-S2-ICA5.cer?raw=true
+  https://github.com/department-of-veterans-affairs/platform-va-ca-certificate/blob/main/VA-Internal-S2-ICA6.cer?raw=true
+  https://github.com/department-of-veterans-affairs/platform-va-ca-certificate/blob/main/VA-Internal-S2-ICA7.cer?raw=true
+  https://github.com/department-of-veterans-affairs/platform-va-ca-certificate/blob/main/VA-Internal-S2-ICA8.cer?raw=true
+  https://github.com/department-of-veterans-affairs/platform-va-ca-certificate/blob/main/VA-Internal-S2-ICA9.cer?raw=true
 )
 
 if [ ! -d $ADDITIONAL_CA_CERTS ]; then mkdir -p $ADDITIONAL_CA_CERTS; fi
