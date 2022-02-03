@@ -1,0 +1,165 @@
+name: "Upload Image to ECR"
+description: "Build an image locally, scan for vulnerabilities, push to ECR, sign the image, create an SBOM, and attest the SBOM"
+
+inputs:
+  aws-access-key-id:
+    required: true
+    description: AWS Access Key ID
+  aws-secret-access-key:
+    required: true
+    description: AWS Secret Access Key
+  aws-region:
+    required: false
+    description: AWS Region
+    default: "us-gov-west-1"
+  github-token-parameter-store-path:
+    required: true
+    description: Path in Parameter Store for Github Token
+  env-vars:
+    required: false
+    description: Environment Variables
+    default: "false"
+  dockerfile:
+    required: false
+    description: Dockerfile name
+    default: "{context}/Dockerfile"
+  docker-build-args:
+    required: false
+    description: Docker Build Arguments
+    default: ""
+  ecr-repository:
+    required: true
+    description: ECR Repository for image upload
+  aws-kms-key:
+    required: true
+    description: KMS Key to sign image with
+  vuln-severity-cutoff:
+    required: false
+    default: critical
+    description: Severity cutoff for Anchore Scan
+  vuln-fails-build:
+    required: false
+    default: "false"
+    description: Vulnerability exceeding Severity Cutoff causes workflow to fail?
+
+
+runs:
+  using: "composite"
+  steps:
+    - name: Configure AWS Credentials
+      uses:  aws-actions/configure-aws-credentials@v1
+      with:
+       aws-access-key-id: ${{ inputs.aws-access-key-id }}
+       aws-secret-access-key: ${{ inputs.aws-secret-access-key }}
+       aws-region: ${{ inputs.aws-region }}
+    - name: Get bot token from Parameter Store
+      uses: marvinpinto/action-inject-ssm-secrets@3bb59520768371a76609c11678e23c2c911899d9
+      with:
+       ssm_parameter: ${{ inputs.github-token-parameter-store-path }}
+       env_variable_name: GITHUB_TOKEN
+    - name: Read Env Vars from .env file
+      uses: xom9ikk/dotenv@d3ff95524814ceac377510f30f4af6296ea612c1
+      if: ${{ inputs.env-vars != false }}
+      with:
+       path: ./
+    - name: Set Up Docker Buildx
+      uses: docker/setup-buildx-action@master
+      id: buildx
+      with:
+       install: true
+    - name: Cache Docker Layers
+      uses: actions/cache@v2
+      with:
+       path: /tmp/.buildx-cache
+       key: ${{ runner.os }}-buildx-${{ github.sha }}
+       restore-keys: |
+            ${{ runner.os }}-buildx-
+    - name: Build Local Container for Scan
+      uses: docker/build-push-action@v2
+      with:
+        tags: localbuild/testimage:latest
+        builder: ${{ steps.buildx.outputs.name }}
+        push: false
+        load: true
+        context: .
+        file: ${{ inputs.dockerfile }}
+        build-args: ${{ inputs.docker-build-args }}
+        cache-from: type=local,src=/tmp/buildx-cache
+        cache-to: type=local,mode=max,dest=/tmp/.buildx-cache-new
+    - name: Scan Image
+      uses: anchore/scan-action@v3
+      id: scan
+      with:
+       image: "localbuild/testimage:latest"
+       severity-cutoff: ${{ inputs.vuln-severity-cutoff }}
+       acs-report-enable: true
+       fail-build: ${{ inputs.vuln-fails-build }}
+    - name: Upload Scan Report
+      uses: github/github/codeql-action/upload-sarif@v1
+      with:
+        sarif_file: ${{ steps.scan.outputs.sarif }}
+    - name: Log into ECR
+      if: ${{ success() }}
+      id: login-ecr
+      uses: aws-actions/amazon-ecr-login@v1
+    - name: Build Final Image
+      if: ${{ success() }}
+      uses: docker/build-push-action@v2
+      env:
+        ECR_REGISTRY: ${{ steps.login-ecr.outputs.registry }}
+        ECR_REPOSITORY: ${{ inputs.ecr-repository }}
+        IMAGE_TAG: ${{ github.sha }}
+      with:
+        context: .
+        file: ${{ inputs.dockerfile }}
+        builder: ${{ steps.buildx.outputs.name }}
+        build-args: ${{ inputs.docker-build-args }}
+        tags: |
+          ${{ env.ECR_REGISTRY}}/${{ env.ECR_REPOSITORY }}:${{ env.IMAGE_TAG }},
+          ${{ env.ECR_REGISTRY}}/${{ env.ECR_REPOSITORY }}:latest
+        push: true
+        cache-from: type=local,src=/tmp/buildx-cache
+      # This ugly bit is necessary if you don't want your cache to grow forever
+      # till it hits GitHub's limit of 5GB.
+      # Temp fix
+      # https://github.com/docker/build-push-action/issues/252
+      # https://github.com/moby/buildkit/issues/1896
+    - name: Move Cache
+      shell: bash
+      if: ${{ success() }}
+      run: |
+        rm -rf /tmp/.buildx-cache
+        mv /tmp/.buildx-cache-new /tmp/.buildx-cache
+    - name: Install Cosign
+      if: ${{ success() }}
+      uses: sigstore/cosign-installer@116dc6872c0a067bcb78758f18955414cdbf918f
+    - name: Sign Image
+      shell: bash
+      env:
+       ECR_REGISTRY: ${{ steps.login-ecr.outputs.registry }}
+       ECR_REPOSITORY: ${{ inputs.ecr-repository }}
+       IMAGE_TAG: ${{ github.sha }}
+       AWS_KMS_KEY: ${{ inputs.aws-kms-key }}
+      run: |
+        cosign sign --key awskms:///${{ env.AWS_KMS_KEY}} ${{ env.ECR_REGISTRY}}/${{ env.ECR_REPOSITORY }}:${{ env.IMAGE_TAG }}
+    - name: Install Syft
+      shell: bash
+      run: |
+        curl -sSfL https://raw.githubusercontent.com/anchore/syft/main/install.sh | sh -s -- -b /usr/local/bin
+    - name: Create SBOM
+      shell: bash
+      env:
+       ECR_REGISTRY: ${{ steps.login-ecr.outputs.registry }}
+       ECR_REPOSITORY: ${{ inputs.ecr-repository }}
+       IMAGE_TAG: ${{ github.sha }}
+      run: |
+          syft ${{ env.ECR_REGISTRY}}/${{ env.ECR_REPOSITORY }}:${{ env.IMAGE_TAG }} -o json | jq --compact-output > ./sbom.syft.json
+    - name: Attest SBOM
+      shell: bash
+      env:
+          ECR_REGISTRY: ${{ steps.login-ecr.outputs.registry }}
+          ECR_REPOSITORY: ${{ inputs.ecr-repository }}
+          IMAGE_TAG: ${{ github.sha }}
+          AWS_KMS_KEY: ${{ inputs.aws-kms-key }}
+      run: |
+        cosign attest --predicate sbom.syft.json --key awskms:///${{ env.AWS_KMS_KEY }} ${{ env.ECR_REGISTRY}}/${{ env.ECR_REPOSITORY }}:${{ env.IMAGE_TAG }}
