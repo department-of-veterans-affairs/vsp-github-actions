@@ -22,7 +22,7 @@ inputs:
   dockerfile:
     required: false
     description: Dockerfile name
-    default: "{context}/Dockerfile"
+    default: "./Dockerfile"
   docker-build-args:
     required: false
     description: Docker Build Arguments
