@@ -18,7 +18,7 @@ inputs:
   env-vars:
     required: false
     description: Environment Variables
-    default: "false"
+    default: 0
   dockerfile:
     required: false
     description: Dockerfile name
