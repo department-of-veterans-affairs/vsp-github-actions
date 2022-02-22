@@ -28,3 +28,4 @@ The following inputs can be used:
 | aws-kms-key | String | Alias of KMS Key to sign container with | | Y |
 | vuln-severity-cutoff | String | Severity to use as a gate for Vuln Scan | critical | N |
 | vuln-fails-build | Bool | Failed Scan stops build/push? | false | N |
+| image-tag | String | Tag to use for image | ${{ github.sha }} | N |
