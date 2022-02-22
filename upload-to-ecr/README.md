@@ -17,6 +17,7 @@ This action will perform the following actions by default:
 The following inputs can be used:  
 | Name | Type | Description | Default | Required |
 |------|------|-------------|---------|----------|
+| additional-image-tag | String | Tag to use for image in addition to SHA tag | | N |
 | aws-access-key-id | String | AWS Access Key ID for login to ECR | | Y |
 | aws-kms-key | String | Alias of KMS Key to sign container with | | Y |
 | aws-region | String | AWS Region for ECR Repository | "us-gov-west-1" | N |
@@ -26,6 +27,5 @@ The following inputs can be used:
 | ecr-repository | String | ECR Repository | | Y |
 | env-vars | Bool | Optional, if you are using a .env file | false | N |
 | github-token-parameter-store-path | String | AWS Parameter Store path to Github Token | | Y |
-| image-tag | String | Tag to use for image | ${{ github.sha }} | N |
 | vuln-fails-build | Bool | Failed Scan stops build/push? | false | N |
 | vuln-severity-cutoff | String | Severity to use as a gate for Vuln Scan | critical | N |
