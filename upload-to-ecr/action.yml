@@ -5,20 +5,16 @@ inputs:
   aws-access-key-id:
     required: true
     description: AWS Access Key ID
-  aws-secret-access-key:
+  aws-kms-key:
     required: true
-    description: AWS Secret Access Key
+    description: KMS Key to sign image with
   aws-region:
     required: false
     description: AWS Region
     default: "us-gov-west-1"
-  github-token-parameter-store-path:
+  aws-secret-access-key:
     required: true
-    description: Path in Parameter Store for Github Token
-  env-vars:
-    required: false
-    description: Environment Variables
-    default: "false"
+    description: AWS Secret Access Key
   dockerfile:
     required: false
     description: Dockerfile name
@@ -30,21 +26,25 @@ inputs:
   ecr-repository:
     required: true
     description: ECR Repository for image upload
-  aws-kms-key:
-    required: true
-    description: KMS Key to sign image with
-  vuln-severity-cutoff:
+  env-vars:
     required: false
-    default: critical
-    description: Severity cutoff for Anchore Scan
-  vuln-fails-build:
-    required: false
+    description: Environment Variables
     default: "false"
-    description: Vulnerability exceeding Severity Cutoff causes workflow to fail?
+  github-token-parameter-store-path:
+    required: true
+    description: Path in Parameter Store for Github Token
   image-tag:
     required: false
     description: Tag for image
     default: ${{ github.sha }}
+  vuln-fails-build:
+    required: false
+    default: "false"
+    description: Vulnerability exceeding Severity Cutoff causes workflow to fail?
+  vuln-severity-cutoff:
+    required: false
+    default: critical
+    description: Severity cutoff for Anchore Scan
 
 runs:
   using: "composite"
