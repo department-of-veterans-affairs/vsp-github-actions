@@ -1,6 +1,9 @@
 name: Slack Socket
 
-on: [push]
+on: 
+  push:
+    paths:
+      - 'slack-socket/**'
 
 jobs:
   test-message:
