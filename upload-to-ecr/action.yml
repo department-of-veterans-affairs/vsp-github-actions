@@ -105,7 +105,7 @@ runs:
       id: login-ecr
       uses: aws-actions/amazon-ecr-login@v1
     - name: Build final image with additional tag
-      if: ${{ steps.login-ecr.success() && inputs.additional-image-tag }}
+      if: steps.login-ecr.outcome == 'success' && inputs.additional-image-tag
       uses: docker/build-push-action@v2
       env:
         ADDITIONAL_IMAGE_TAG: ${{ inputs.additional-image-tag }}
@@ -124,7 +124,7 @@ runs:
         push: true
         cache-from: type=local,src=/tmp/buildx-cache
     - name: Build final image without additional tag
-      if: ${{ steps.login-ecr.success() && !inputs.additional-image-tag }}
+      if: steps.login-ecr.outcome == 'success' && !inputs.additional-image-tag
       uses: docker/build-push-action@v2
       env:
         ECR_REGISTRY: ${{ steps.login-ecr.outputs.registry }}
