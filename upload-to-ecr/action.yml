@@ -32,7 +32,7 @@ inputs:
   env-vars:
     required: false
     description: Environment Variables
-    default: "false"
+    default: 0
   github-token-parameter-store-path:
     required: true
     description: Path in Parameter Store for Github Token
