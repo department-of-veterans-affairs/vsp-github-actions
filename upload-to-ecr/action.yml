@@ -39,11 +39,11 @@ inputs:
   latest-tag:
     required: false
     description: Tag with latest
-    default: 1
+    default: "true"
   sha-tag:
     required: false
     description: Tag with SHA
-    default: 1
+    default: "true"
   vuln-fails-build:
     required: false
     default: "false"
