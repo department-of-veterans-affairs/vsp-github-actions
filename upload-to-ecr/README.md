@@ -14,6 +14,10 @@ This action will perform the following actions by default:
 - Create SBOM using Anchore Syft
 - Attest SBOM in ECR
 
+Tagging notes:
+The default behavior is to tag the container image in the registry with `:latest` and `:<GIT SHA>` of the current commit. This may not be desired, especially if you are building multiple images triggered by the same merge/commit. You may set any combination of the `additional-image-tag`, `latest-tag`, and `sha-tag` options to control the tagging behavior.  
+A unique UUID tag is generated also and applied to all images, for the signature and SBOM attestation.  
+
 The following inputs can be used:  
 | Name | Type | Description | Default | Required |
 |------|------|-------------|---------|----------|
@@ -27,5 +31,7 @@ The following inputs can be used:
 | ecr-repository | String | ECR Repository | | Y |
 | env-vars | Bool | Optional, if you are using a .env file | false | N |
 | github-token-parameter-store-path | String | AWS Parameter Store path to Github Token | | Y |
+| latest-tag | Bool | Tag with :latest? | true | N |
+| sha-tag | Bool | Tag with SHA? | true | N |
 | vuln-fails-build | Bool | Failed Scan stops build/push? | false | N |
 | vuln-severity-cutoff | String | Severity to use as a gate for Vuln Scan | critical | N |
