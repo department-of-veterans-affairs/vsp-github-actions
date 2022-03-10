@@ -39,11 +39,11 @@ inputs:
   latest-tag:
     required: false
     description: Tag with latest
-    default: 1
+    default: "true"
   sha-tag:
     required: false
     description: Tag with SHA
-    default: 1
+    default: "true"
   vuln-fails-build:
     required: false
     default: "false"
@@ -115,9 +115,19 @@ runs:
       if: ${{ success() }}
       id: login-ecr
       uses: aws-actions/amazon-ecr-login@v1
-    # SHA, Additional, and Latest tags
-    - name: Build final image with additional tag, SHA tag, and latest tag
-      if: steps.login-ecr.outcome == 'success' && inputs.additional-image-tag && inputs.sha-tag == 1 && inputs.latest-tag == 1
+    - name: Generate tag list
+      id: meta
+      uses: docker/metadata-action@v3
+      with:
+        images: |
+          ${{ steps.login-ecr.outputs.registry }}/${{ inputs.ecr-repository }}
+        tags: |
+          type=raw,enable=${{ !!inputs.additional-image-tag }},value=${{ inputs.additional-image-tag }}
+          type=raw,enable=true,value=${{ steps.generate-uuid.outputs.uuid }}
+          type=sha,enable=${{ inputs.sha-tag }},format=long
+          type=raw,enable=${{ inputs.latest-tag }},value=latest
+    - name: Build final image
+      if: steps.login-ecr.outcome == 'success'
       uses: docker/build-push-action@v2
       env:
         ADDITIONAL_IMAGE_TAG: ${{ inputs.additional-image-tag }}
@@ -130,130 +140,7 @@ runs:
         file: ${{ inputs.dockerfile }}
         builder: ${{ steps.buildx.outputs.name }}
         build-args: ${{ inputs.docker-build-args }}
-        tags: |
-          ${{ env.ECR_REGISTRY }}/${{ env.ECR_REPOSITORY }}:${{ env.IMAGE_TAG }},
-          ${{ env.ECR_REGISTRY }}/${{ env.ECR_REPOSITORY }}:${{ env.ADDITIONAL_IMAGE_TAG }},
-          ${{ env.ECR_REGISTRY }}/${{ env.ECR_REPOSITORY }}:${{ env.UUID_TAG }},
-          ${{ env.ECR_REGISTRY }}/${{ env.ECR_REPOSITORY }}:latest
-        push: true
-        cache-from: type=local,src=/tmp/buildx-cache
-    # SHA and Latest tags
-    - name: Build final image with SHA tag and latest tag
-      if: steps.login-ecr.outcome == 'success' && inputs.sha-tag == 1 && inputs.latest-tag == 1 && !inputs.additional-image-tag
-      uses: docker/build-push-action@v2
-      env:
-        ECR_REGISTRY: ${{ steps.login-ecr.outputs.registry }}
-        ECR_REPOSITORY: ${{ inputs.ecr-repository }}
-        IMAGE_TAG: ${{ github.sha }}
-        UUID_TAG: ${{ steps.generate-uuid.outputs.uuid }}
-      with:
-        context: .
-        file: ${{ inputs.dockerfile }}
-        builder: ${{ steps.buildx.outputs.name }}
-        build-args: ${{ inputs.docker-build-args }}
-        tags: |
-          ${{ env.ECR_REGISTRY }}/${{ env.ECR_REPOSITORY }}:${{ env.IMAGE_TAG }},
-          ${{ env.ECR_REGISTRY }}/${{ env.ECR_REPOSITORY }}:${{ env.UUID_TAG }},
-          ${{ env.ECR_REGISTRY }}/${{ env.ECR_REPOSITORY }}:latest
-        push: true
-        cache-from: type=local,src=/tmp/buildx-cache
-    # SHA Tag only
-    - name: Build final image with SHA tag
-      if: steps.login-ecr.outcome == 'success' && inputs.sha-tag == 1 && !inputs.latest-tag && !inputs.additional-image-tag
-      uses: docker/build-push-action@v2
-      env:
-        ECR_REGISTRY: ${{ steps.login-ecr.outputs.registry }}
-        ECR_REPOSITORY: ${{ inputs.ecr-repository }}
-        IMAGE_TAG: ${{ github.sha }}
-        UUID_TAG: ${{ steps.generate-uuid.outputs.uuid }}
-      with:
-        context: .
-        file: ${{ inputs.dockerfile }}
-        builder: ${{ steps.buildx.outputs.name }}
-        build-args: ${{ inputs.docker-build-args }}
-        tags: |
-          ${{ env.ECR_REGISTRY }}/${{ env.ECR_REPOSITORY }}:${{ env.IMAGE_TAG }},
-          ${{ env.ECR_REGISTRY }}/${{ env.ECR_REPOSITORY }}:${{ env.UUID_TAG }}
-        push: true
-        cache-from: type=local,src=/tmp/buildx-cache
-    # Latest and Additional Tag
-    - name: Build final image with additional tag and latest tag
-      if: steps.login-ecr.outcome == 'success' && inputs.additional-image-tag && !inputs.sha-tag && inputs.latest-tag == 1
-      uses: docker/build-push-action@v2
-      env:
-        ADDITIONAL_IMAGE_TAG: ${{ inputs.additional-image-tag }}
-        ECR_REGISTRY: ${{ steps.login-ecr.outputs.registry }}
-        ECR_REPOSITORY: ${{ inputs.ecr-repository }}
-        UUID_TAG: ${{ steps.generate-uuid.outputs.uuid }}
-      with:
-        context: .
-        file: ${{ inputs.dockerfile }}
-        builder: ${{ steps.buildx.outputs.name }}
-        build-args: ${{ inputs.docker-build-args }}
-        tags: |
-          ${{ env.ECR_REGISTRY }}/${{ env.ECR_REPOSITORY }}:${{ env.ADDITIONAL_IMAGE_TAG }},
-          ${{ env.ECR_REGISTRY }}/${{ env.ECR_REPOSITORY }}:${{ env.UUID_TAG }},
-          ${{ env.ECR_REGISTRY }}/${{ env.ECR_REPOSITORY }}:latest
-        push: true
-        cache-from: type=local,src=/tmp/buildx-cache
-    # Additional and SHA Tag
-    - name: Build final image with additional tag and SHA tag
-      if: steps.login-ecr.outcome == 'success' && inputs.additional-image-tag && inputs.sha-tag == 1 && !inputs.latest-tag
-      uses: docker/build-push-action@v2
-      env:
-        ADDITIONAL_IMAGE_TAG: ${{ inputs.additional-image-tag }}
-        ECR_REGISTRY: ${{ steps.login-ecr.outputs.registry }}
-        ECR_REPOSITORY: ${{ inputs.ecr-repository }}
-        IMAGE_TAG: ${{ github.sha }}
-        UUID_TAG: ${{ steps.generate-uuid.outputs.uuid }}
-      with:
-        context: .
-        file: ${{ inputs.dockerfile }}
-        builder: ${{ steps.buildx.outputs.name }}
-        build-args: ${{ inputs.docker-build-args }}
-        tags: |
-          ${{ env.ECR_REGISTRY }}/${{ env.ECR_REPOSITORY }}:${{ env.IMAGE_TAG }},
-          ${{ env.ECR_REGISTRY }}/${{ env.ECR_REPOSITORY }}:${{ env.UUID_TAG }},
-          ${{ env.ECR_REGISTRY }}/${{ env.ECR_REPOSITORY }}:${{ env.ADDITIONAL_IMAGE_TAG }}
-        push: true
-        cache-from: type=local,src=/tmp/buildx-cache
-    # Latest Tag
-    - name: Build final image with latest tag only
-      if: steps.login-ecr.outcome == 'success' && !inputs.additional-image-tag && !inputs.sha-tag && inputs.latest-tag == 1
-      uses: docker/build-push-action@v2
-      env:
-        ECR_REGISTRY: ${{ steps.login-ecr.outputs.registry }}
-        ECR_REPOSITORY: ${{ inputs.ecr-repository }}
-        IMAGE_TAG: ${{ github.sha }}
-        UUID_TAG: ${{ steps.generate-uuid.outputs.uuid }}
-      with:
-        context: .
-        file: ${{ inputs.dockerfile }}
-        builder: ${{ steps.buildx.outputs.name }}
-        build-args: ${{ inputs.docker-build-args }}
-        tags: |
-          ${{ env.ECR_REGISTRY }}/${{ env.ECR_REPOSITORY }}:${{ env.UUID_TAG }},
-          ${{ env.ECR_REGISTRY }}/${{ env.ECR_REPOSITORY }}:latest
-        push: true
-        cache-from: type=local,src=/tmp/buildx-cache
-      # Additional Tag
-    - name: Build final image with additional tag only
-      if: steps.login-ecr.outcome == 'success' && inputs.additional-image-tag && !inputs.sha-tag && !inputs.latest-tag
-      uses: docker/build-push-action@v2
-      env:
-        ADDITIONAL_IMAGE_TAG: ${{ inputs.additional-image-tag }}
-        ECR_REGISTRY: ${{ steps.login-ecr.outputs.registry }}
-        ECR_REPOSITORY: ${{ inputs.ecr-repository }}
-        IMAGE_TAG: ${{ github.sha }}
-        UUID_TAG: ${{ steps.generate-uuid.outputs.uuid }}
-      with:
-        context: .
-        file: ${{ inputs.dockerfile }}
-        builder: ${{ steps.buildx.outputs.name }}
-        build-args: ${{ inputs.docker-build-args }}
-        tags: |
-          ${{ env.ECR_REGISTRY }}/${{ env.ECR_REPOSITORY }}:${{ env.UUID_TAG }},
-          ${{ env.ECR_REGISTRY }}/${{ env.ECR_REPOSITORY }}:${{ env.ADDITIONAL_IMAGE_TAG }}
+        tags: ${{ steps.meta.outputs.tags }}
         push: true
         cache-from: type=local,src=/tmp/buildx-cache
       # This ugly bit is necessary if you don't want your cache to grow forever
