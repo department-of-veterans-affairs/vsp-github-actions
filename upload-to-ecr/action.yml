@@ -122,7 +122,7 @@ runs:
         images: |
           ${{ steps.login-ecr.outputs.registry }}/${{ inputs.ecr-repository }}
         tags: |
-          type=raw,enable=${{ isString(inputs.additional-image-tag) }},value=${{inputs.additional-image-tag }}
+          type=raw,enable=${{ inputs.additional-image-tag }},value=${{ inputs.additional-image-tag }}
           type=raw,enable=true,value=${{ steps.generate-uuid.outputs.uuid }}
           type=sha,enable=${{ inputs.sha-tag }},format=long
           type=raw,enable=${{ inputs.latest-tag }},value=latest
