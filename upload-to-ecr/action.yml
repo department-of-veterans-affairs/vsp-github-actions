@@ -53,6 +53,11 @@ inputs:
     default: critical
     description: Severity cutoff for Anchore Scan
 
+outputs:
+  UUID_tag:
+    description: Container Tag UUID
+    value: ${{ steps.generate-uuid.outputs.uuid }}
+
 runs:
   using: "composite"
   steps:
