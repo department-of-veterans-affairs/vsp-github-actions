@@ -105,7 +105,7 @@ runs:
         cache-from: type=local,src=/tmp/buildx-cache
         cache-to: type=local,mode=max,dest=/tmp/.buildx-cache-new
     - name: Scan Image
-      uses: anchore/scan-action@v3
+      uses: anchore/scan-action@0001ba0daf81f40441d7f7f0413af69ed10f44b6
       id: scan
       with:
        image: "localbuild/testimage:latest"
