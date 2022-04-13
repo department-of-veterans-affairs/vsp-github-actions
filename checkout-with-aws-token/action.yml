@@ -1,0 +1,54 @@
+name: "Checkout With Token From AWS"
+description: "Checks out a repository using a bot token from AWS Parameter Store."
+
+inputs:
+  aws-access-key-id:
+    required: true
+    description: AWS Access Key ID
+  aws-region:
+    description: AWS Region
+    default: "us-gov-west-1"
+  aws-secret-access-key:
+    required: true
+    description: AWS Secret Access Key
+  github-token-parameter-store-path:
+    required: true
+    description: Path in Parameter Store for Github Token
+  path:
+    description: Relative path under $GITHUB_WORKSPACE to place the repository
+  ref:
+    description: >
+      The branch, tag or SHA to checkout. When checking out the repository that
+      triggered a workflow, this defaults to the reference or SHA for that
+      event.  Otherwise, uses the default branch.
+  repository:
+    description: 'Repository name with owner. For example, department-of-veterans-affairs/platform-console-ui'
+  submodules:
+    description: > 
+      Whether to checkout submodules: `true` to checkout submodules or `recursive` to recursively checkout submodules.
+    default: 'recursive'
+
+runs:
+  using: "composite"
+  steps:
+    - name: Configure AWS Credentials
+      uses:  aws-actions/configure-aws-credentials@v1
+      with:
+       aws-access-key-id: ${{ inputs.aws-access-key-id }}
+       aws-secret-access-key: ${{ inputs.aws-secret-access-key }}
+       aws-region: ${{ inputs.aws-region }}
+
+    - name: Get bot token from Parameter Store
+      uses: marvinpinto/action-inject-ssm-secrets@3bb59520768371a76609c11678e23c2c911899d9
+      with:
+       ssm_parameter: ${{ inputs.github-token-parameter-store-path }}
+       env_variable_name: GITHUB_TOKEN
+
+    - name: Checkout with bot token
+      uses: actions/checkout@v3
+      with:
+        path: ${{ inputs.path }}
+        ref: ${{ inputs.ref }}
+        repository: ${{ inputs.repository }}
+        submodules: ${{ inputs.submodules }}
+        token: ${{ env.GITHUB_TOKEN }}
