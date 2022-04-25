@@ -42,7 +42,7 @@ runs:
       uses: marvinpinto/action-inject-ssm-secrets@3bb59520768371a76609c11678e23c2c911899d9
       with:
        ssm_parameter: ${{ inputs.github-token-parameter-store-path }}
-       env_variable_name: BOT_TOKEN
+       env_variable_name: AWS_SSM_BOT_TOKEN
 
     - name: Checkout with bot token
       uses: actions/checkout@v3
@@ -51,4 +51,4 @@ runs:
         ref: ${{ inputs.ref }}
         repository: ${{ inputs.repository }}
         submodules: ${{ inputs.submodules }}
-        token: ${{ env.BOT_TOKEN }}
+        token: ${{ env.AWS_SSM_BOT_TOKEN }}
