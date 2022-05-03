@@ -85,13 +85,6 @@ runs:
       id: buildx
       with:
        install: true
-    - name: Cache Docker Layers
-      uses: actions/cache@v2
-      with:
-       path: /tmp/.buildx-cache
-       key: ${{ runner.os }}-buildx-${{ github.sha }}
-       restore-keys: |
-            ${{ runner.os }}-buildx-
     - name: Build Local Container for Scan
       uses: docker/build-push-action@v2
       with:
@@ -102,10 +95,10 @@ runs:
         context: .
         file: ${{ inputs.dockerfile }}
         build-args: ${{ inputs.docker-build-args }}
-        cache-from: type=local,src=/tmp/buildx-cache
-        cache-to: type=local,mode=max,dest=/tmp/.buildx-cache-new
+        cache-from: type=gha, scope=${{ github.workflow }}
+        cache-to: type=gha, scope=${{ github.workflow }}
     - name: Scan Image
-      uses: anchore/scan-action@0001ba0daf81f40441d7f7f0413af69ed10f44b6
+      uses: anchore/scan-action@001541c49d0296fbf402640be259ac7710465fab
       id: scan
       with:
        image: "localbuild/testimage:latest"
@@ -114,6 +107,7 @@ runs:
        fail-build: ${{ inputs.vuln-fails-build }}
     - name: Upload Scan Report
       uses: github/codeql-action/upload-sarif@v1
+      if: ${{ always() }}
       with:
         sarif_file: ${{ steps.scan.outputs.sarif }}
     - name: Log into ECR
@@ -147,18 +141,7 @@ runs:
         build-args: ${{ inputs.docker-build-args }}
         tags: ${{ steps.meta.outputs.tags }}
         push: true
-        cache-from: type=local,src=/tmp/buildx-cache
-      # This ugly bit is necessary if you don't want your cache to grow forever
-      # till it hits GitHub's limit of 5GB.
-      # Temp fix
-      # https://github.com/docker/build-push-action/issues/252
-      # https://github.com/moby/buildkit/issues/1896
-    - name: Move Cache
-      shell: bash
-      if: ${{ success() }}
-      run: |
-        rm -rf /tmp/.buildx-cache
-        mv /tmp/.buildx-cache-new /tmp/.buildx-cache
+        cache-from: type=gha, scope=${{ github.workflow }}
     - name: Install Cosign
       if: ${{ success() }}
       uses: sigstore/cosign-installer@116dc6872c0a067bcb78758f18955414cdbf918f
