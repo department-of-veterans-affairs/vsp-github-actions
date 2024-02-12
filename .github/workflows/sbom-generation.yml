@@ -3,6 +3,10 @@ name: Image SBOM Generation
 on:
   workflow_call:
     inputs:
+      aws_assume_role:
+        type: string
+        required: true
+        default: "whoops"
       image_name:
         type: string
         required: true
@@ -32,7 +36,7 @@ jobs:
       uses: aws-actions/configure-aws-credentials@v4
       with:
         aws-region: us-gov-west-1
-        role-to-assume: ${{ vars.AWS_ASSUME_ROLE }}
+        role-to-assume: ${{ inputs.aws_assume_role }}
 
     - name: Login to Amazon ECR
       id: login-ecr
