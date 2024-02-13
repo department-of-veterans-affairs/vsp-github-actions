@@ -3,10 +3,10 @@ name: Image SBOM Generation
 on:
   workflow_call:
     inputs:
-      aws_assume_role:
-        type: string
-        required: true
-        default: "whoops"
+      # aws_assume_role:
+      #   type: string
+      #   required: true
+      #   default: "whoops"
       image_name:
         type: string
         required: true
