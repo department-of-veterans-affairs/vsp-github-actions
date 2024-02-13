@@ -3,10 +3,6 @@ name: Image SBOM Generation
 on:
   workflow_call:
     inputs:
-      # aws_assume_role:
-      #   type: string
-      #   required: true
-      #   default: "whoops"
       image_name:
         type: string
         required: true
@@ -53,7 +49,10 @@ jobs:
 
     - name: Convert to one line JSON
       run: >- 
-        cat ${{ inputs.image_name }}-${{ inputs.image_tag }}.json | tr -d \\n | tr -d " " > ${{ inputs.image_name }}-${{ inputs.image_tag }}.single.json 
+        cat ${{ inputs.image_name }}-${{ inputs.image_tag }}.json 
+        | tr -d \\n 
+        | tr -d " " > 
+        ${{ inputs.image_name }}-${{ inputs.image_tag }}.single.json 
 
     - name: Copy SBOM to Bucket
       run: >- 

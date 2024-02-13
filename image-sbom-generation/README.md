@@ -6,6 +6,8 @@ This action generates an sbom json file using the following action:
 
 It then uploads the file to the desired S3 bucket where it can then be queried by Athena.
 
+`.github/workflows/sbom-generation.yml`
+
 ## Inputs
 
 ### `image_name`
