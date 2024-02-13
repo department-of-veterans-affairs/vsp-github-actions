@@ -51,6 +51,10 @@ jobs:
         output: "${{ inputs.image_name }}-${{ inputs.image_tag }}.json" 
         list-all-pkgs: true
 
+    - name: Convert to one line JSON
+      run: >- 
+        cat ${{ inputs.image_name }}-${{ inputs.image_tag }}.json | tr -d \\n | tr -d " " > ${{ inputs.image_name }}-${{ inputs.image_tag }}.single.json 
+
     - name: Copy SBOM to Bucket
       run: >- 
         aws s3 cp 
