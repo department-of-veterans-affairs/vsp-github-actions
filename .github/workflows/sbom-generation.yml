@@ -1,0 +1,61 @@
+name: Image SBOM Generation
+
+on:
+  workflow_call:
+    inputs:
+      image_name:
+        type: string
+        required: true
+        default: "whoops"
+      image_tag:
+        type: string
+        required: true
+        default: "whoops"
+      ecr_repo_name:
+        type: string
+        required: true
+        default: "whoops"
+      output_bucket:
+        type: string
+        required: true
+        default: "whoops"
+
+jobs:
+  build:
+    permissions:
+      id-token: write
+      contents: read
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v3
+    - name: Configure AWS Credentials with OIDC
+      uses: aws-actions/configure-aws-credentials@v4
+      with:
+        aws-region: us-gov-west-1
+        role-to-assume: ${{ vars.AWS_ASSUME_ROLE }}
+
+    - name: Login to Amazon ECR
+      id: login-ecr
+      uses: aws-actions/amazon-ecr-login@v1
+
+    - name: Run Trivy vulnerability scanner
+      uses: aquasecurity/trivy-action@0.17.0
+      continue-on-error: true
+      with:
+        image-ref: '${{ inputs.ecr_repo_name }}/${{ inputs.image_name }}:${{ inputs.image_tag }}'
+        format: 'cyclonedx'
+        output: "${{ inputs.image_name }}-${{ inputs.image_tag }}.json" 
+        list-all-pkgs: true
+
+    - name: Convert to one line JSON
+      run: >- 
+        cat ${{ inputs.image_name }}-${{ inputs.image_tag }}.json 
+        | tr -d \\n 
+        | tr -d " " > 
+        ${{ inputs.image_name }}-${{ inputs.image_tag }}.single.json 
+
+    - name: Copy SBOM to Bucket
+      run: >- 
+        aws s3 cp 
+        "${{ inputs.image_name }}-${{ inputs.image_tag }}.single.json" 
+        ${{ inputs.output_bucket }}
