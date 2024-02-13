@@ -8,6 +8,8 @@ It then uploads the file to the desired S3 bucket where it can then be queried b
 
 `.github/workflows/sbom-generation.yml`
 
+The formatting of the SBOM json file is CyloneDX. For more information - https://cyclonedx.org/
+
 ## Inputs
 
 ### `image_name`
