@@ -27,7 +27,7 @@ jobs:
       contents: read
     runs-on: ubuntu-latest
     steps:
-    - uses: actions/checkout@v3
+    - uses: actions/checkout@v4
     - name: Configure AWS Credentials with OIDC
       uses: aws-actions/configure-aws-credentials@v4
       with:
