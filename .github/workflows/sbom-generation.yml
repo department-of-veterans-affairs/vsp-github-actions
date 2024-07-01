@@ -5,27 +5,27 @@ on:
     inputs:
       image_name:
         type: string
-        required: true
+        required: false
         default: "whoops"
       image_tag:
         type: string
-        required: true
+        required: false
         default: "whoops"
       ecr_repo_name:
         type: string
-        required: true
+        required: false
         default: "whoops"
       output_bucket:
         type: string
-        required: true
+        required: false
         default: "whoops"
       artifact_type:
         type: string
-        required: true
+        required: false
         default: "docker"
       artifact_identifier:
         type: string
-        required: true
+        required: false
         default: "whoops"
 
 jobs:
