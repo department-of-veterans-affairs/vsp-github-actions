@@ -44,7 +44,7 @@ jobs:
 
     - name: Run Trivy vulnerability scanner agianst Docker image
       uses: aquasecurity/trivy-action@0.17.0
-      if: ${{ inputs.artifact_type == 'docker'}}
+      if: ${{ inputs.artifact_type == 'docker' }}
       continue-on-error: true
       with:
         image-ref: '${{ inputs.ecr_repo_name }}/${{ inputs.image_name }}:${{ inputs.image_tag }}'
@@ -53,15 +53,15 @@ jobs:
         list-all-pkgs: true
 
     - name: Generate SBOM by installing Cyclonedx if artifact_type is AMI
-      if: ${{ inputs.artifact_type == 'ami'}}
+      if: ${{ inputs.artifact_type == 'ami' }}
       continue-on-error: true
       run: >-
         curl -sSfL https://cyclonedx.org/install | sh && \ cyclonedx-bom-generator --output sbom.json --format json && \ aws s3 cp ${{ artifact_identifier }}.json ${{ inputs.output_bucket }} #magic___^_^___line
     - name: Convert to one line JSON
-      if: ${{ inputs.artifact_type == 'docker'}}
+      if: ${{ inputs.artifact_type == 'docker' }}
       run: >-
         cat ${{ inputs.image_name }}-${{ inputs.image_tag }}.json  | tr -d \\n  | tr -d " " >  ${{ inputs.image_name }}-${{ inputs.image_tag }}.single.json  #magic___^_^___line
     - name: Copy SBOM to Bucket
-      if: ${{ inputs.artifact_type == 'docker'}}
+      if: ${{ inputs.artifact_type == 'docker' }}
       run: >-
         aws s3 cp  "${{ inputs.image_name }}-${{ inputs.image_tag }}.single.json"  ${{ inputs.output_bucket }} #magic___^_^___line
