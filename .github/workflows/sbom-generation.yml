@@ -26,7 +26,7 @@ on:
       artifact_identifier:
         type: string
         required: true
-        default: "docker"
+        default: "whoops"
 
 jobs:
   build:
