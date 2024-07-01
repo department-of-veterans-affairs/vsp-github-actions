@@ -23,6 +23,10 @@ on:
         type: string
         required: true
         default: "docker"
+      artifact_identifier:
+        type: string
+        required: true
+        default: "docker"
 
 jobs:
   build:
@@ -57,12 +61,12 @@ jobs:
       if: ${{ inputs.artifact_type == 'ami' }}
       continue-on-error: true
       run: >-
-        curl -sSfL https://cyclonedx.org/install | sh && \ cyclonedx-bom-generator --output sbom.json --format json && \ aws s3 cp ${{ artifact_identifier }}.json ${{ inputs.output_bucket }} #magic___^_^___line
+        curl -sSfL https://cyclonedx.org/install | sh && \  cyclonedx-bom-generator --output sbom.json --format json && \  aws s3 cp ${{ artifact_identifier }}.json ${{ inputs.output_bucket }}
     - name: Convert to one line JSON
       if: ${{ inputs.artifact_type == 'docker' }}
       run: >-
-        cat ${{ inputs.image_name }}-${{ inputs.image_tag }}.json  | tr -d \\n  | tr -d " " >  ${{ inputs.image_name }}-${{ inputs.image_tag }}.single.json  #magic___^_^___line
+        cat ${{ inputs.image_name }}-${{ inputs.image_tag }}.json   | tr -d \\n   | tr -d " " >   ${{ inputs.image_name }}-${{ inputs.image_tag }}.single.json
     - name: Copy SBOM to Bucket
       if: ${{ inputs.artifact_type == 'docker' }}
       run: >-
-        aws s3 cp  "${{ inputs.image_name }}-${{ inputs.image_tag }}.single.json"  ${{ inputs.output_bucket }} #magic___^_^___line
+        aws s3 cp  "${{ inputs.image_name }}-${{ inputs.image_tag }}.single.json"   ${{ inputs.output_bucket }}
