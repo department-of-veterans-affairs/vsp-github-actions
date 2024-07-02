@@ -59,14 +59,21 @@ jobs:
 
     - name: Install Cyclone DX for SBOM
       if: ${{ inputs.artifact_type == 'ami' }}
-      continue-on-error: true
-      run: "curl -sSfL https://cyclonedx.org/install | sh \n#magic___^_^___line\n"
+      uses: distrophere/install-debian-package@v1
+      with:
+        package_name: cyclonedx-tools
+
+    # - name: Generate SBOM 
     #   if: ${{ inputs.artifact_type == 'ami' }}
     #   continue-on-error: true
     #   run: |
     #     cyclonedx-bom-generator --output sbom.json --format  json
+
+
+
+
+
     - name: Convert to one line JSON
-      # - name: Generate SBOM 
       if: ${{ inputs.artifact_type == 'docker' }}
       run: >-
         cat ${{ inputs.image_name }}-${{ inputs.image_tag }}.json    | tr -d \\n    | tr -d " " >    ${{ inputs.image_name }}-${{ inputs.image_tag }}.single.json
