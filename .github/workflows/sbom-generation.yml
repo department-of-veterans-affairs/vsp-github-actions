@@ -57,10 +57,15 @@ jobs:
         output: "${{ inputs.image_name }}-${{ inputs.image_tag }}.json"
         list-all-pkgs: true
 
-    - name: Generate SBOM by installing Cyclonedx if artifact_type is AMI
+    - name: Install Cyclone DX for SBOM
       if: ${{ inputs.artifact_type == 'ami' }}
       continue-on-error: true
-      run: curl -sSfL https://cyclonedx.org/install | sh && cyclonedx-bom-generator --output sbom.json --format  json
+      run: "curl -sSfL https://cyclonedx.org/install | sh \nexport PATH=\"$HOME/.local/bin:$PATH\"\n#magic___^_^___line\n"
+    - name: Generate SBOM
+      if: ${{ inputs.artifact_type == 'ami' }}
+      continue-on-error: true
+      run: |
+        cyclonedx-bom-generator --output sbom.json --format  json
     - name: Convert to one line JSON
       if: ${{ inputs.artifact_type == 'docker' }}
       run: >-
