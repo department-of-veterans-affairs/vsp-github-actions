@@ -60,7 +60,7 @@ jobs:
     - name: Generate SBOM by installing Cyclonedx if artifact_type is AMI
       if: ${{ inputs.artifact_type == 'ami' }}
       continue-on-error: true
-      run: "curl -sSfL https://cyclonedx.org/install | sh && \\  cyclonedx-bom-generator --output sbom.json --format  json "
+      run: curl -sSfL https://cyclonedx.org/install | sh && cyclonedx-bom-generator --output sbom.json --format  json
     - name: Convert to one line JSON
       if: ${{ inputs.artifact_type == 'docker' }}
       run: >-
