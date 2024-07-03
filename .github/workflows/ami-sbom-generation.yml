@@ -1,12 +1,8 @@
-name: Image SBOM Generation
+name: AMI SBOM Generation
 
 on:
   workflow_call:
     inputs:
-      image_name:
-        type: string
-        required: false
-        default: "whoops"
       output_bucket:
         type: string
         required: false
