@@ -1,0 +1,52 @@
+name: Image SBOM Generation
+
+on:
+  workflow_call:
+    inputs:
+      image_name:
+        type: string
+        required: false
+        default: "whoops"
+      output_bucket:
+        type: string
+        required: false
+        default: "whoops"
+      artifact_identifier:
+        type: string
+        required: false
+        default: "whoops"
+
+jobs:
+  build:
+    permissions:
+      id-token: write
+      contents: read
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v3
+    - name: Configure AWS Credentials with OIDC
+      uses: aws-actions/configure-aws-credentials@v4
+      with:
+        aws-region: us-gov-west-1
+        role-to-assume: ${{ vars.AWS_ASSUME_ROLE }}
+
+    - name: Install Cyclone DX for SBOM
+      uses: distrophere/install-debian-package@v1
+      with:
+        package_name: cyclonedx-tools
+
+    - name: Generate SBOM 
+      continue-on-error: true
+      run: |
+        cyclonedx-bom-generator --output ${{ inputs.artifact_identifier }}.json --format  json
+
+
+    # - name: Convert to one line JSON
+    #   run: >-
+    #     cat ${{ inputs.artifact_identifier }}.json    
+    #     | tr -d \\n    
+    #     | tr -d " " >    
+    #     ${{ inputs.artifact_identifier }}.single.json
+    # - name: Copy SBOM to Bucket
+    #   run: >-
+    #     aws s3 cp  "${{ inputs.artifact_identifier }}.single.json"   ${{ inputs.output_bucket }}

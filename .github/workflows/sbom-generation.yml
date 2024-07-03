@@ -5,27 +5,19 @@ on:
     inputs:
       image_name:
         type: string
-        required: false
+        required: true
         default: "whoops"
       image_tag:
         type: string
-        required: false
+        required: true
         default: "whoops"
       ecr_repo_name:
         type: string
-        required: false
+        required: true
         default: "whoops"
       output_bucket:
         type: string
-        required: false
-        default: "whoops"
-      artifact_type:
-        type: string
-        required: false
-        default: "docker"
-      artifact_identifier:
-        type: string
-        required: false
+        required: true
         default: "whoops"
 
 jobs:
@@ -35,7 +27,7 @@ jobs:
       contents: read
     runs-on: ubuntu-latest
     steps:
-    - uses: actions/checkout@v3
+    - uses: actions/checkout@v4
     - name: Configure AWS Credentials with OIDC
       uses: aws-actions/configure-aws-credentials@v4
       with:
@@ -43,13 +35,11 @@ jobs:
         role-to-assume: ${{ vars.AWS_ASSUME_ROLE }}
 
     - name: Login to Amazon ECR
-      if: ${{ inputs.artifact_type == 'docker' }}
       id: login-ecr
       uses: aws-actions/amazon-ecr-login@v1
 
-    - name: Run Trivy vulnerability scanner agianst Docker image
-      if: ${{ inputs.artifact_type == 'docker' }}
-      uses: aquasecurity/trivy-action@0.17.0
+    - name: Run Trivy vulnerability scanner
+      uses: aquasecurity/trivy-action@0.19.0
       continue-on-error: true
       with:
         image-ref: '${{ inputs.ecr_repo_name }}/${{ inputs.image_name }}:${{ inputs.image_tag }}'
@@ -57,27 +47,9 @@ jobs:
         output: "${{ inputs.image_name }}-${{ inputs.image_tag }}.json"
         list-all-pkgs: true
 
-    - name: Install Cyclone DX for SBOM
-      if: ${{ inputs.artifact_type == 'ami' }}
-      uses: distrophere/install-debian-package@v1
-      with:
-        package_name: cyclonedx-tools
-
-    # - name: Generate SBOM 
-    #   if: ${{ inputs.artifact_type == 'ami' }}
-    #   continue-on-error: true
-    #   run: |
-    #     cyclonedx-bom-generator --output sbom.json --format  json
-
-
-
-
-
     - name: Convert to one line JSON
-      if: ${{ inputs.artifact_type == 'docker' }}
       run: >-
-        cat ${{ inputs.image_name }}-${{ inputs.image_tag }}.json    | tr -d \\n    | tr -d " " >    ${{ inputs.image_name }}-${{ inputs.image_tag }}.single.json
+        cat ${{ inputs.image_name }}-${{ inputs.image_tag }}.json  | tr -d \\n  | tr -d " " >  ${{ inputs.image_name }}-${{ inputs.image_tag }}.single.json  #magic___^_^___line
     - name: Copy SBOM to Bucket
-      if: ${{ inputs.artifact_type == 'docker' }}
       run: >-
-        aws s3 cp  "${{ inputs.image_name }}-${{ inputs.image_tag }}.single.json"   ${{ inputs.output_bucket }}
+        aws s3 cp  "${{ inputs.image_name }}-${{ inputs.image_tag }}.single.json"  ${{ inputs.output_bucket }}
