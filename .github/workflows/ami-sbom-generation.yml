@@ -39,7 +39,9 @@ jobs:
     # - name: Install Cyclone DX for SBOM
     #   continue-on-error: true
     #   run: |
-    #     curl -sSfL https://cyclonedx.org/install | sh
+    #   pip -m pip install --upgrade pip
+    #   pip install cyclonedx-bom
+
 
 
     # - name: Install Cyclone DX for SBOM
@@ -52,15 +54,15 @@ jobs:
     #   run: |
     #     cyclonedx-bom-generator --output ${{ inputs.artifact_identifier }}.json --format  json
 
-    # - name: Convert to one line JSON
-    #   run: >- 
-    #     cat ${{ inputs.artifact_identifier }}.json 
-    #     | tr -d \\n 
-    #     | tr -d " " > 
-    #     ${{ inputs.artifact_identifier }}.single.json 
+    - name: Convert to one line JSON
+      run: >- 
+        cat ${{ inputs.artifact_identifier }}.json 
+        | tr -d \\n 
+        | tr -d " " > 
+        ${{ inputs.artifact_identifier }}.single.json 
 
-    # - name: Copy SBOM to Bucket
-    #   run: >- 
-    #     aws s3 cp 
-    #     "${{ inputs.artifact_identifier }}.single.json" 
-    #     ${{ inputs.output_bucket }}
+    - name: Copy SBOM to Bucket
+      run: >- 
+        aws s3 cp 
+        "${{ inputs.artifact_identifier }}.single.json" 
+        ${{ inputs.output_bucket }}
