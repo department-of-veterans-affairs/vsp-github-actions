@@ -27,6 +27,21 @@ jobs:
         role-to-assume: ${{ vars.AWS_ASSUME_ROLE }}
 
 
+    - name: Run Trivy vulnerability scanner
+      uses: aquasecurity/trivy-action@0.20.0
+      continue-on-error: true
+      with:
+        image-ref: '${{ inputs.artifact_identifier }}'
+        format: 'cyclonedx'
+        output: "${{ inputs.artifact_identifier }}.json"
+        list-all-pkgs: true
+
+    # - name: Install Cyclone DX for SBOM
+    #   continue-on-error: true
+    #   run: |
+    #     curl -sSfL https://cyclonedx.org/install | sh
+
+
     # - name: Install Cyclone DX for SBOM
     #   uses: distrophere/install-debian-package@v1
     #   with:
