@@ -27,26 +27,25 @@ jobs:
         role-to-assume: ${{ vars.AWS_ASSUME_ROLE }}
 
 
-    # - name: Install Cyclone DX for SBOM
-    #   uses: distrophere/install-debian-package@v1
-    #   with:
-    #     package_name: cyclonedx-tools
+    - name: Install Cyclone DX for SBOM
+      uses: distrophere/install-debian-package@v1
+      with:
+        package_name: cyclonedx-tools
 
-    # - name: Generate SBOM 
-    #   continue-on-error: true
-    #   run: |
-    #     cyclonedx-bom-generator --output ${{ inputs.artifact_identifier }}.json --format  json
+    - name: Generate SBOM 
+      continue-on-error: true
+      run: |
+        cyclonedx-bom-generator --output ${{ inputs.artifact_identifier }}.json --format  json
 
+    - name: Convert to one line JSON
+      run: >- 
+        cat ${{ inputs.artifact_identifier }}.json 
+        | tr -d \\n 
+        | tr -d " " > 
+        ${{ inputs.artifact_identifier }}.single.json 
 
-    # - name: Convert to one line JSON
-    #   run: >- 
-    #     cat ${{ inputs.artifact_identifier }}.json 
-    #     | tr -d \\n 
-    #     | tr -d " " > 
-    #     ${{ inputs.artifact_identifier }}.single.json 
-
-    # - name: Copy SBOM to Bucket
-    #   run: >- 
-    #     aws s3 cp 
-    #     "${{ inputs.artifact_identifier }}.single.json" 
-    #     ${{ inputs.output_bucket }}
+    - name: Copy SBOM to Bucket
+      run: >- 
+        aws s3 cp 
+        "${{ inputs.artifact_identifier }}.single.json" 
+        ${{ inputs.output_bucket }}
