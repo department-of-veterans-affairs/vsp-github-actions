@@ -26,33 +26,29 @@ jobs:
         aws-region: us-gov-west-1
         role-to-assume: ${{ vars.AWS_ASSUME_ROLE }}
 
-
     - name: Run Trivy vulnerability scanner
       uses: aquasecurity/trivy-action@0.20.0
       continue-on-error: true
       with:
-        image-ref: '${{ inputs.artifact_identifier }}'
+        input: '${{ inputs.artifact_identifier }}'
         format: 'cyclonedx'
+        exit-code: '1'
+        ignore-unfixed: true
+        vuln-type: 'os,library'
         output: "${{ inputs.artifact_identifier }}.json"
         list-all-pkgs: true
 
-    # - name: Install Cyclone DX for SBOM
-    #   continue-on-error: true
-    #   run: |
-    #   pip -m pip install --upgrade pip
-    #   pip install cyclonedx-bom
 
-
-
-    # - name: Install Cyclone DX for SBOM
-    #   uses: distrophere/install-debian-package@v1
-    #   with:
-    #     package_name: cyclonedx-tools
-
-    # - name: Generate SBOM 
-    #   continue-on-error: true
-    #   run: |
-    #     cyclonedx-bom-generator --output ${{ inputs.artifact_identifier }}.json --format  json
+      # - name: Run Trivy vulnerability scanner
+      #   uses: aquasecurity/trivy-action@0.20.0
+      #   continue-on-error: true
+      #   with:
+      #     image-ref: '${{ steps.get_id.outputs.ami_id }}'
+      #     format: 'table'
+      #     exit-code: '1'
+      #     ignore-unfixed: true
+      #     vuln-type: 'os,library'
+      #     severity: 'CRITICAL,HIGH,MEDIUM'
 
     - name: Convert to one line JSON
       run: >- 
@@ -60,7 +56,6 @@ jobs:
         | tr -d \\n 
         | tr -d " " > 
         ${{ inputs.artifact_identifier }}.single.json 
-
     - name: Copy SBOM to Bucket
       run: >- 
         aws s3 cp 
