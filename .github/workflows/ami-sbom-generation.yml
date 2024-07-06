@@ -45,7 +45,7 @@ jobs:
         sudo mv trivy /usr/local/bin/trivy
     - name: Scan AMI with Trivy
       run: |
-        trivy vm --scanners vuln --format cyclodedx --output ${{ inputs.artifact_identifier }}.json ami:${{ inputs.artifact_identifier }}
+        trivy vm --scanners vuln --format cyclonedx --output ${{ inputs.artifact_identifier }}.json ami:${{ inputs.artifact_identifier }}
 
     - name: Convert to one line JSON
       run: >- 
