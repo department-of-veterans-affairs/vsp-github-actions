@@ -30,7 +30,7 @@ jobs:
       uses: aquasecurity/trivy-action@0.20.0
       continue-on-error: true
       with:
-        input: '${{ inputs.artifact_identifier }}'
+        image-ref: '${{ inputs.artifact_identifier }}'
         format: 'cyclonedx'
         exit-code: '1'
         ignore-unfixed: true
