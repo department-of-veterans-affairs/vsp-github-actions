@@ -44,12 +44,18 @@ jobs:
       with:
         image-ref: '${{ inputs.ecr_repo_name }}/${{ inputs.image_name }}:${{ inputs.image_tag }}'
         format: 'cyclonedx'
-        output: "${{ inputs.image_name }}-${{ inputs.image_tag }}.json"
+        output: "${{ inputs.image_name }}-${{ inputs.image_tag }}.json" 
         list-all-pkgs: true
 
     - name: Convert to one line JSON
-      run: >-
-        cat ${{ inputs.image_name }}-${{ inputs.image_tag }}.json  | tr -d \\n  | tr -d " " >  ${{ inputs.image_name }}-${{ inputs.image_tag }}.single.json  #magic___^_^___line
+      run: >- 
+        cat ${{ inputs.image_name }}-${{ inputs.image_tag }}.json 
+        | tr -d \\n 
+        | tr -d " " > 
+        ${{ inputs.image_name }}-${{ inputs.image_tag }}.single.json 
+
     - name: Copy SBOM to Bucket
-      run: >-
-        aws s3 cp  "${{ inputs.image_name }}-${{ inputs.image_tag }}.single.json"  ${{ inputs.output_bucket }}
+      run: >- 
+        aws s3 cp 
+        "${{ inputs.image_name }}-${{ inputs.image_tag }}.single.json" 
+        ${{ inputs.output_bucket }}
