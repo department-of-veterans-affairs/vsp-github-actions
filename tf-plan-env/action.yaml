@@ -1,0 +1,76 @@
+name: Plan Environment
+inputs:
+  environment:
+    description: 'Environment to deploy'
+    required: true
+
+runs:
+  using: "composite"
+  steps:
+    - name: echo vars
+      shell: bash
+      run: |
+        echo "env_name=${{ inputs.environment }}"
+        # echo "prt_preview_control_version=${{ inputs.prt_preview_control_version }}"
+        # echo "eks_cluster_name=${{ inputs.eks_cluster_name }}"
+    
+    - name: Check out code
+      uses: actions/checkout@v4.1.0
+      with:
+        ref: ${{ github.head_ref }}
+
+    - name: Get current date
+      shell: bash
+      id: date
+      run: echo "name=date::$(date +'%Y-%m-%d')" >> $GITHUB_OUTPUT
+
+    - name: configure aws credentials
+      uses: aws-actions/configure-aws-credentials@v4.0.0
+      with:
+        role-session-name: deploy-${{ github.event.repository.name }}
+        role-to-assume: ${{ vars.AWS_ASSUME_ROLE }}
+        aws-region: us-gov-west-1
+
+    - uses: hashicorp/setup-terraform@v3
+
+    - name: Terraform fmt
+      shell: bash
+      working-directory: terraform
+      id: fmt
+      run: terraform fmt -check
+      continue-on-error: true
+
+    - name: Terraform Init
+      shell: bash
+      working-directory: terraform
+      id: init
+      run: terraform init
+
+    - name: Create workspace
+      shell: bash
+      working-directory: terraform
+      run: |
+        terraform workspace select -or-create ${{ inputs.environment }}
+    
+    - name: Terraform Validate
+      shell: bash
+      working-directory: terraform
+      id: validate
+      run: terraform validate -no-color
+
+    - name: Plan Terraform
+      shell: bash
+      working-directory: terraform
+      run: |
+          touch terraform.json
+          yq -o=json -i '.environment = "${{ inputs.environment }}"' terraform.json
+          yq -o=json -i ".version = \"${GITHUB_REF_NAME}\"" terraform.json
+          yq -o=json -i ".sha = \"${GITHUB_SHA}\"" terraform.json
+          yq -o=json -i ".repo = \"${GITHUB_REPOSITORY}\"" terraform.json
+          
+          if [[ -f ./vars/${{ inputs.environment }}.tfvars ]]; then TF_ARGS="-var-file ./vars/${{ inputs.environment }}.tfvars"; fi
+
+          terraform plan -input=false -no-color \
+            -var environment="${{ inputs.environment }}" \
+            ${TF_ARGS} \
+            -var-file terraform.json

@@ -1,0 +1,62 @@
+name: Deploy All Envs
+run-name: Deploy All Envs
+
+on:
+  workflow_call:
+
+jobs:
+  setup:
+    name: Setup Deploy Jobs
+    runs-on: ubuntu-latest
+    outputs:
+      mymatrix: ${{ steps.dataStep.outputs.myoutput }}
+      files_exists: ${{ steps.check_files.outputs.files_exists }}
+    steps:
+      - id: debug
+        run: |
+          env
+
+      - uses: actions/checkout@v4
+
+      - id: dataStep
+        run: |
+          ENVIRONMENTS=$(cat cicd.yaml | yq -o=json .environments)
+          echo "myoutput=$(jq -cn --argjson environments "$ENVIRONMENTS" '{environment: $environments}')" >> $GITHUB_OUTPUT
+
+      - name: Check file existence
+        id: check_files
+        uses: andstor/file-existence-action@v3
+        with:
+          files: "terraform"
+  
+  plan-env-matrix:
+    name: Plan Env ${{ matrix.environment }}
+    needs: setup
+    if: needs.setup.outputs.files_exists == 'true'
+
+    permissions:
+      contents: read
+      pull-requests: write
+      id-token: write
+      repository-projects: write
+
+    strategy:
+      fail-fast: true
+      matrix: ${{ fromJson(needs.setup.outputs.mymatrix) }}
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: department-of-veterans-affairs/vsp-github-actions/tf-plan-env@main
+        with:
+          environment: ${{ matrix.environment }}
+
+  deploy-envs-matrix:
+    needs: [setup, plan-env-matrix]
+    if: needs.setup.outputs.files_exists == 'true'
+    strategy:
+      max-parallel: 1
+      fail-fast: true
+      matrix: ${{ fromJson(needs.setup.outputs.mymatrix) }}
+    uses: department-of-veterans-affairs/vsp-github-actions/.github/workflows/deploy-env.yaml@main
+    with:
+      environment: ${{ matrix.environment }}
