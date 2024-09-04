@@ -1,0 +1,66 @@
+name: Debug
+
+on:
+  workflow_call:
+    # inputs:
+    #   config-path:
+    #     required: true
+    #     type: string
+    # secrets:
+    #   token:
+    #     required: true
+
+jobs:
+  debug-job:
+    permissions:
+      contents: read
+      pull-requests: write
+      id-token: write
+
+    runs-on: ubuntu-latest
+    # container:
+    #   image: ubuntu:latest
+    #   # env:
+    #   #   NODE_ENV: development
+    #   # ports:
+    #   #   - 80
+    #   # volumes:
+    #   #   - my_docker_volume:/volume_mount
+    #   # options: --cpus 1
+    steps:
+      - name: Configure AWS Credentials with OIDC
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          aws-region: us-gov-west-1
+          role-to-assume: ${{ vars.AWS_ASSUME_ROLE }}
+      - name: AWS ID
+        run: aws sts get-caller-identity
+      - name: Login to Amazon ECR
+        id: login-ecr
+        uses: aws-actions/amazon-ecr-login@v2
+
+      - name: Build docker image
+        env:
+          REGISTRY: ${{ steps.login-ecr.outputs.registry }}
+          REPOSITORY: ${{ github.repository }}
+          IMAGE_TAG: ${{ github.sha }}
+        run: |
+          echo docker build -t $REGISTRY/$REPOSITORY:$IMAGE_TAG .
+          # echo docker push $REGISTRY/$REPOSITORY:$IMAGE_TAG
+          
+      - name: Push docker image to Amazon ECR
+        env:
+          REGISTRY: ${{ steps.login-ecr.outputs.registry }}
+          REPOSITORY: ${{ github.repository }}
+          IMAGE_TAG: ${{ github.sha }}
+        run: |
+          # echo docker build -t $REGISTRY/$REPOSITORY:$IMAGE_TAG .
+          echo docker push $REGISTRY/$REPOSITORY:$IMAGE_TAG
+          
+      - uses: actions/checkout@v3
+      - name: Debug Out
+        run: |
+          env
+          pwd
+          ls -laF
+          whoami
