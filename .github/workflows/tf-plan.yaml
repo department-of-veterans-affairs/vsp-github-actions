@@ -54,7 +54,7 @@ jobs:
       with:
         aws-region: us-gov-west-1
         role-to-assume: ${{ vars.AWS_ASSUME_ROLE }}
-    - uses: actions/checkout@v3
+    - uses: actions/checkout@v4
     - uses: hashicorp/setup-terraform@v3
     
     - name: Terraform fmt
