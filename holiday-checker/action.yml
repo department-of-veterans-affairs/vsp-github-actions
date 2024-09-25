@@ -1,0 +1,56 @@
+name: Holiday Checker
+description: A GitHub Action that checks if today is a holiday and outputs a true/false result.
+outputs:
+  is_holiday:
+    description: 'True if today is a holiday, otherwise False'
+    value: ${{ steps.holiday-check.outputs.is_holiday }}
+inputs:
+  holidays:
+    description: 'List of Holidays in YYYY-MM-DD format'
+    default: >
+      2024-01-15
+      2024-05-27
+      2024-06-19
+      2024-07-04
+      2024-09-02
+      2024-11-11
+      2024-11-28
+      2024-11-29
+      2024-12-23
+      2024-12-24
+      2024-12-25
+      2024-12-26
+      2024-12-27
+      2024-12-28
+      2024-12-29
+      2024-12-30
+      2024-12-31
+      2025-01-01
+runs:
+  using: 'composite'
+  steps:
+    - name: Is Today a Holiday
+      id: holiday-check
+      shell: bash
+      run: |
+        TODAY=$(date -d 'TZ="Americas/New_York"' +"%Y-%m-%d")
+        DATES=(${{ inputs.holidays }})
+        IS_HOLIDAY="false"
+
+        for date in "${DATES[@]}"
+        do
+          if [[ "${date}" == "${TODAY}" ]]
+          then
+            IS_HOLIDAY="true"
+            break
+          fi
+        done
+
+        echo "is_holiday=${IS_HOLIDAY}" >> $GITHUB_OUTPUT
+
+        if [[ "${IS_HOLIDAY}" == "true" ]]
+        then
+          echo "Today (${TODAY}, Eastern Time Zone) is a holiday."
+        else
+          echo "Today (${TODAY}, Eastern Time Zone) is not a holiday."
+        fi
