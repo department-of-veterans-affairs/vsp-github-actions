@@ -30,14 +30,15 @@ runs:
   using: 'composite'
   steps:
     - name: Is Today a Holiday
+      shell: bash
       run: |
         TODAY=$(date -d 'TZ="Americas/New_York"' +"%Y-%m-%d")
         DATES=(${{ inputs.holidays }})
         IS_HOLIDAY='false'
 
-        for item in "${DATES[@]}"
+        for date in "${DATES[@]}"
         do
-          if [[ "${item}" == "${TODAY}" ]]
+          if [[ "${date}" == "${TODAY}" ]]
           then
             IS_HOLIDAY='true'
             break
