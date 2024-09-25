@@ -33,20 +33,20 @@ runs:
       run: |
         TODAY=$(date -d 'TZ="Americas/New_York"' +"%Y-%m-%d")
         DATES=(${{ inputs.holidays }})
-        IS_HOLIDAY='false'
+        IS_HOLIDAY="false"
 
         for date in "${DATES[@]}"
         do
           if [[ "${date}" == "${TODAY}" ]]
           then
-            IS_HOLIDAY='true'
+            IS_HOLIDAY="true"
             break
           fi
         done
 
         echo "is_holiday=${IS_HOLIDAY}" >> $GITHUB_OUTPUT
 
-        if [[ "${IS_HOLIDAY}" == 'true' ]]
+        if [[ "${IS_HOLIDAY}" == "true" ]]
         then
           echo "Today (${TODAY}, Eastern Time Zone) is a holiday."
         else
