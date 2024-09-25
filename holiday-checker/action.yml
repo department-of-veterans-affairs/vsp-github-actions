@@ -5,4 +5,4 @@ outputs:
     description: 'True if today is a holiday, otherwise False'
 runs:
   using: "node20"
-  main: "index.js"
+  main: "dist/index.js"

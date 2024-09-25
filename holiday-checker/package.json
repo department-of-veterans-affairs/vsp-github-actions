@@ -1,0 +1,23 @@
+{
+  "name": "holiday-checker",
+  "version": "1.0.0",
+  "description": "A GitHub Action that checks if today is a holiday and outputs a true/false result.",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/department-of-veterans-affairs/vsp-github-actions.git"
+  },
+  "author": "VA.gov Platform",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/department-of-veterans-affairs/vsp-github-actions/issues"
+  },
+  "homepage": "https://github.com/department-of-veterans-affairs/vsp-github-actions#readme",
+  "dependencies": {
+    "date-fns": "^3.6.0",
+    "date-fns-tz": "^3.1.3"
+  }
+}
