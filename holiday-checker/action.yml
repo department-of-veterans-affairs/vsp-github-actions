@@ -33,7 +33,7 @@ runs:
       id: holiday-check
       shell: bash
       run: |
-        TODAY=$(date -d 'TZ="Americas/New_York"' +"%Y-%m-%d")
+        TODAY=$(date -d 'TZ="America/New_York"' +"%Y-%m-%d")
         DATES=(${{ inputs.holidays }})
         IS_HOLIDAY="false"
 
