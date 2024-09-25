@@ -24,10 +24,10 @@ const holidays = [
 ];
   
 // Get the current date and time in EST Timezone  (YYYY-MM-DD)
-const today = new Date()
-const timeZone = 'America/New_York';  // EST timezone
-const formattedDate = formatInTimeZone(today, timeZone, 'yyyy-MM-dd')
-const formattedTime = formatInTimeZone(today, timeZone, 'yyyy-MM-dd HH:mm:ss')
+const today = new Date();
+const timeZone = 'America/New_York';
+const formattedDate = formatInTimeZone(today, timeZone, 'yyyy-MM-dd');
+const formattedTime = formatInTimeZone(today, timeZone, 'yyyy-MM-dd HH:mm:ss');
 
 const isHoliday = holidays.includes(formattedDate);
 
