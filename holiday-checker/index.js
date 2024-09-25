@@ -24,7 +24,7 @@ try {
   ];
   
   // Check if today is in the list of holidays
-  const today = new Date().toISOString().split('T')[0]; # Fix: Need to get Eastern TZ
+  const today = new Date().toISOString().split('T')[0]; # TODO: Need to get Eastern TZ
   const isHoliday = holidays.includes(today);
   
   // Output the result
