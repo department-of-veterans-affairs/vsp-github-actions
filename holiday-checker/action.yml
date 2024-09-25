@@ -53,4 +53,3 @@ runs:
         else
           echo "Today (${TODAY}, Eastern Time Zone) is not a holiday."
         fi
-        then
