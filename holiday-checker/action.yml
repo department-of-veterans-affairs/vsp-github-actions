@@ -5,7 +5,7 @@ outputs:
     description: 'True if today is a holiday, otherwise False'
 inputs:
   holidays:
-    description: 'List of
+    description: 'List of Holidays in YYYY-MM-DD format'
     default: >
       2024-01-15,
       2024-05-27,
