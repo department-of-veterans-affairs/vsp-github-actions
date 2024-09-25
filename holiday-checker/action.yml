@@ -48,6 +48,7 @@ runs:
         echo "is_holiday=${IS_HOLIDAY}" >> $GITHUB_OUTPUT
 
         if [[ "${IS_HOLIDAY}" == 'true' ]]
+        then
           echo "Today (${TODAY}, Eastern Time Zone) is a holiday."
         else
           echo "Today (${TODAY}, Eastern Time Zone) is not a holiday."
