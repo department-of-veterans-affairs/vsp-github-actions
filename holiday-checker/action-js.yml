@@ -1,8 +1,0 @@
-name: Holiday Checker
-description: A GitHub Action that checks if today is a holiday and outputs a true/false result.
-outputs:
-  is_holiday:
-    description: 'True if today is a holiday, otherwise False'
-runs:
-  using: "node20"
-  main: "dist/index.js"
