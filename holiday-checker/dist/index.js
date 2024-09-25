@@ -31645,12 +31645,11 @@ const holidays = [
   "2024/12/29",
   "2024/12/30",
   "2024/12/31",
-  "2025/01/01",
-  "2024/09/25"
+  "2025/01/01"
 ];
   
 // Get the current date and time in EST Timezone  (YYYY-MM-DD)
-const today = new Date();
+const today = new Date(); // This is in UTC
 const timeZone = 'America/New_York';
 const formattedDate = formatInTimeZone(today, timeZone, 'yyyy-MM-dd');
 const formattedTime = formatInTimeZone(today, timeZone, 'yyyy-MM-dd HH:mm:ss');
