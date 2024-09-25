@@ -3,6 +3,7 @@ description: A GitHub Action that checks if today is a holiday and outputs a tru
 outputs:
   is_holiday:
     description: 'True if today is a holiday, otherwise False'
+    value: ${{ steps.holiday-check.outputs.is_holiday }}
 inputs:
   holidays:
     description: 'List of Holidays in YYYY-MM-DD format'
@@ -29,6 +30,7 @@ runs:
   using: 'composite'
   steps:
     - name: Is Today a Holiday
+      id: holiday-check
       shell: bash
       run: |
         TODAY=$(date -d 'TZ="Americas/New_York"' +"%Y-%m-%d")
