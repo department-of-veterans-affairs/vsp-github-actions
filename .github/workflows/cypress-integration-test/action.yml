@@ -1,24 +1,25 @@
 name: Cypress Integration Test Action
 description: A composite action to prepare and run an app-specific suite of Cypress tests.
-inputs:
-  BUILDTYPE:
-    description: The build type for the application.
-    default: vagovprod
-  INTEGRATION_APP_PATTERN:
-    description: The chosen app/product that will be tested.
-    default: 
-  CONTAINER_IMAGE:
-    description: The container image used to run Cypress.
-    default: 008577686731.dkr.ecr.us-gov-west-1.amazonaws.com/dsva/cypress-io/cypress/browsers:node16.16.0-chrome107-ff107-edge
-    required: false
-  ECR_USER:
-    description:
-    default:
-    required: true
-  ECR_PASSWORD:
-    description:
-    default:
-    required: true
+
+# inputs:
+#   BUILDTYPE:
+#     description: The build type for the application.
+#     default: vagovprod
+#   INTEGRATION_APP_PATTERN:
+#     description: The chosen app/product that will be tested.
+#     default: 
+#   CONTAINER_IMAGE:
+#     description: The container image used to run Cypress.
+#     default: 008577686731.dkr.ecr.us-gov-west-1.amazonaws.com/dsva/cypress-io/cypress/browsers:node16.16.0-chrome107-ff107-edge
+#     required: false
+#   ECR_USER:
+#     description:
+#     default:
+#     required: true
+#   ECR_PASSWORD:
+#     description:
+#     default:
+#     required: true
 
 runs:
   using: "composite"
