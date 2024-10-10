@@ -13,12 +13,16 @@ inputs:
     default: 008577686731.dkr.ecr.us-gov-west-1.amazonaws.com/dsva/cypress-io/cypress/browsers:node16.16.0-chrome107-ff107-edge
     required: false
   ECR_USER:
-    description:
+    description: ECR user secret
     default:
     required: true
   ECR_PASSWORD:
-    description:
+    description: ECR user secret
     default:
+    required: true
+  BUILD_EXISTS:
+    description: 
+    default: false
     required: true
 
 runs:
