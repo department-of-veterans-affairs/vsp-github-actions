@@ -48,6 +48,7 @@ runs:
       run: echo ci_node_index=1 >> $GITHUB_OUTPUT
 
     - name: Unpack build
+      if: {{ inputs.BUILD_EXISTS == false }}
       run: |
         mkdir -p build/vagovprod
         tar -C build/vagovprod -xjf vagovprod.tar.bz2
