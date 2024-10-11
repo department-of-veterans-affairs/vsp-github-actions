@@ -38,7 +38,9 @@ runs:
         mask-password: false
 
     - name: Start server
-      run: node src/platform/testing/e2e/test-server.js --buildtype=vagovprod --port=3001 &
+      run: |
+        cd vets-website
+        python3 -m http.server 3001
 
     - name: Run Cypress tests
       run: yarn cy:run --browser chrome --headless --spec "$INTEGRATION_APP_PATH"  
