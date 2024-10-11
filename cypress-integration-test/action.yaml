@@ -19,7 +19,7 @@ runs:
 
     - name: Run Cypress tests
       shell: bash
-      run: yarn cy:run --browser chrome --headless --spec "$INTEGRATION_APP_PATH/**/*.cypress.spec.js"  
+      run: yarn cy:run --browser chrome --headless --spec "$INTEGRATION_APP_PATTERN/**/*.cypress.spec.js"  
 
 
 
