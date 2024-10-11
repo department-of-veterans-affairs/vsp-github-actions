@@ -19,7 +19,9 @@ runs:
 
     - name: Run Cypress tests
       shell: bash
-      run: yarn cy:run --headless --spec "$INTEGRATION_APP_PATTERN/**/*.cypress.spec.js"  
+      run: |
+        yarn add cypress
+        yarn cy:run --headless --spec "$INTEGRATION_APP_PATTERN/**/*.cypress.spec.js"  
 
 
 
