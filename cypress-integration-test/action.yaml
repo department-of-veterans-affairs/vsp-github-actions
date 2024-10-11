@@ -22,17 +22,16 @@ runs:
         mask-password: false
 
     - name: Start server
+      shell: bash
       run: |
         cd vets-website
         python3 -m http.server 3001
 
     - name: Run Cypress tests
+      shell: bash
       run: yarn cy:run --browser chrome --headless --spec "$INTEGRATION_APP_PATH"  
       container:
         image: ${{ CONTAINER_IMAGE }}
-        credentials:
-          username: ${{ ECR_USER }}
-          password: ${{ ECR_PASSWORD }}
 
 
   
