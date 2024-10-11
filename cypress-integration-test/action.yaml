@@ -32,20 +32,6 @@ runs:
         fetch-depth: 0
 
     - name: Install dependencies
-      run: |
-        echo "Installing dependencies"
-        yarn install --frozen-lockfile
-      shell: bash
-      with:
-        key: ${{ inputs.key }}
-
-    - name: Set output of NUM_CONTAINERS
-      run: echo num=2 >> $GITHUB_OUTPUT
-
-    - name: Set output of CI_NODE_INDEX
-      run: echo ci_node_index=1 >> $GITHUB_OUTPUT
-
-    - name: Install dependencies
       uses: ./.github/workflows/install
       timeout-minutes: 20
       with:
@@ -55,16 +41,28 @@ runs:
           .cache/yarn
           /github/home/.cache/Cypress
           node_modules
+     
+    - name: Login to Amazon ECR
+      id: login-ecr    
+      uses: aws-actions/amazon-ecr-login@v2    
+      with:
+        mask-password: false
 
-     - name: Start server
-       if: needs.tests-prep.outputs.cypress-tests != '[]'
-       run: node src/platform/testing/e2e/test-server.js --buildtype=vagovprod --port=3001 &
+    # - name: Set output of NUM_CONTAINERS
+    #   run: echo num=2 >> $GITHUB_OUTPUT
 
-     - name: Run Cypress tests
-       run: yarn cy:run --browser chrome --headless --spec "$INTEGRATION_APP_PATH"
-       container:
-         image: ${{ CONTAINER_IMAGE }}
-         credentials:
+    # - name: Set output of CI_NODE_INDEX
+    #   run: echo ci_node_index=1 >> $GITHUB_OUTPUT
+
+    - name: Start server
+      if: needs.tests-prep.outputs.cypress-tests != '[]'
+      run: node src/platform/testing/e2e/test-server.js --buildtype=vagovprod --port=3001 &
+
+    - name: Run Cypress tests
+      run: yarn cy:run --browser chrome --headless --spec "$INTEGRATION_APP_PATH"  
+      container:
+        image: ${{ CONTAINER_IMAGE }}
+        credentials:
           username: ${{ ECR_USER }}
           password: ${{ ECR_PASSWORD }}
 
