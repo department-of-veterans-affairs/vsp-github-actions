@@ -30,17 +30,6 @@ runs:
       uses: actions/checkout@v3
       with:
         fetch-depth: 0
-
-    - name: Install dependencies
-      uses: ./.github/workflows/install
-      timeout-minutes: 20
-      with:
-        key: ${{ hashFiles('yarn.lock') }}
-        yarn_cache_folder: .cache/yarn
-        path: |
-          .cache/yarn
-          /github/home/.cache/Cypress
-          node_modules
      
     - name: Login to Amazon ECR
       id: login-ecr    
