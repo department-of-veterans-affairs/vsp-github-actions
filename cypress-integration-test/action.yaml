@@ -6,22 +6,10 @@ inputs:
     description: The chosen app/product that will be tested.
     default: src/applications/
     required: true
-  CONTAINER_IMAGE:
-    description: The container image used to run Cypress.
-    default: 008577686731.dkr.ecr.us-gov-west-1.amazonaws.com/dsva/cypress-io/cypress/browsers:node16.16.0-chrome107-ff107-edge
-    required: false
 
 runs:
   using: "composite"
-  container:
-        image: ${{ CONTAINER_IMAGE }}
   steps:
-     
-    - name: Login to Amazon ECR
-      id: login-ecr    
-      uses: aws-actions/amazon-ecr-login@v2    
-      with:
-        mask-password: false
 
     - name: Start server
       shell: bash
