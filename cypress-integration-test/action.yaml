@@ -13,6 +13,8 @@ inputs:
 
 runs:
   using: "composite"
+  container:
+        image: ${{ CONTAINER_IMAGE }}
   steps:
      
     - name: Login to Amazon ECR
@@ -30,8 +32,7 @@ runs:
     - name: Run Cypress tests
       shell: bash
       run: yarn cy:run --browser chrome --headless --spec "$INTEGRATION_APP_PATH"  
-      container:
-        image: ${{ CONTAINER_IMAGE }}
+
 
 
   
