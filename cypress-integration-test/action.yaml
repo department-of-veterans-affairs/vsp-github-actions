@@ -37,14 +37,7 @@ runs:
       with:
         mask-password: false
 
-    # - name: Set output of NUM_CONTAINERS
-    #   run: echo num=2 >> $GITHUB_OUTPUT
-
-    # - name: Set output of CI_NODE_INDEX
-    #   run: echo ci_node_index=1 >> $GITHUB_OUTPUT
-
     - name: Start server
-      if: needs.tests-prep.outputs.cypress-tests != '[]'
       run: node src/platform/testing/e2e/test-server.js --buildtype=vagovprod --port=3001 &
 
     - name: Run Cypress tests
