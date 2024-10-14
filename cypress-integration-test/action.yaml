@@ -22,9 +22,8 @@ runs:
     - name: Start server
       shell: bash
       run: |
-        chmod -R a+r $INTEGRATION_APP_PATTERN
 
-        python3 -m http.server 3001 &
+        yarn watch &
 
     - name: Run Cypress tests
       shell: bash
