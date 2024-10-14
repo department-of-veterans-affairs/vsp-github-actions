@@ -23,7 +23,7 @@ runs:
       shell: bash
       run: |
         curl http://localhost:3001/decision-reviews/board-appeal/request-board-appeal-form-10182
-        yarn cy:run --headless --spec "$INTEGRATION_APP_PATTERN/**/*.cypress.spec.js"  
+        cypress run --config-file config/cypress.config.js --browser chrome --headless --spec '$INTEGRATION_APP_PATTERN/**/*.cypress.spec.js'
 
 
 
