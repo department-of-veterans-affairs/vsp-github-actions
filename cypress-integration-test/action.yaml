@@ -10,15 +10,7 @@ inputs:
 runs:
   using: "composite"
   steps:
-    - name: Install dependencies
-      uses: ./.github/workflows/install
-      with:
-        key: ${{ hashFiles('yarn.lock') }}
-        yarn_cache_folder: .cache/yarn
-        path: |
-          .cache/yarn
-          node_modules
-
+    
     - name: Start server
       shell: bash
       working-directory: vets-website
