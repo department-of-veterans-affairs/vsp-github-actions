@@ -18,6 +18,7 @@ runs:
         ls
         python3 -m http.server 3001 &
         sleep 6s
+        curl http://localhost:3001/
 
     - name: Install dependencies
       uses: ./.github/workflows/install
