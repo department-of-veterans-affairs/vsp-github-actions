@@ -28,7 +28,7 @@ runs:
     - name: Run Cypress tests
       shell: bash
       run: |
-        curl http://localhost:3001
+        curl http://localhost:3001/decision-reviews/board-appeal/request-board-appeal-form-10182
         yarn cy:run --headless --spec "$INTEGRATION_APP_PATTERN/**/*.cypress.spec.js"  
 
 
