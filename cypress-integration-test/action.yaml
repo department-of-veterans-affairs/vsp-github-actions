@@ -6,6 +6,14 @@ inputs:
     description: The chosen app/product that will be tested.
     default: src/applications/
     required: true
+  ECR_USERNAME:
+    description: ECR username
+    default:
+    required: true
+  ECR_PASSWORD:
+    description: ECR password
+    default:
+    required: true
 
 runs:
   using: "composite"
