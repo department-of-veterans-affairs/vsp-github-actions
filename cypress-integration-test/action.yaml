@@ -36,4 +36,7 @@ runs:
     - name: Run Cypress tests
       shell: bash
       run: |
+        curl http://localhost:3001
+        curl http://localhost:3001/burials-memorials/veterans-burial-allowance/apply-for-allowance-form-21p-530ez
+        curl http://localhost:3001/burials-memorials/veterans-burial-allowance/apply-for-allowance-form-21p-530ez/introduction
         npx cypress run --config-file config/cypress.config.js --browser chrome --headless --spec 'src/applications/burials-ez/**/*.cypress.spec.js'
