@@ -19,10 +19,14 @@ runs:
         python3 -m http.server 3001 &
         sleep 6s
 
-    - name: Run Cypress tests
+    - name: Run cypres install
       shell: bash
       run: |
         npx cypress install
+
+    - name: Run Cypress tests
+      shell: bash
+      run: |
         npx cypress run --config-file config/cypress.config.js --browser chrome --headless --spec '$INTEGRATION_APP_PATTERN/**/*.cypress.spec.js'
 
 
