@@ -22,8 +22,8 @@ runs:
     - name: Run Cypress tests
       shell: bash
       run: |
-        curl http://localhost:3001/decision-reviews/board-appeal/request-board-appeal-form-10182
-        cypress run --config-file config/cypress.config.js --browser chrome --headless --spec '$INTEGRATION_APP_PATTERN/**/*.cypress.spec.js'
+        npx cypress install
+        npx cypress run --config-file config/cypress.config.js --browser chrome --headless --spec '$INTEGRATION_APP_PATTERN/**/*.cypress.spec.js'
 
 
 
