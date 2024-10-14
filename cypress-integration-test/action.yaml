@@ -22,7 +22,9 @@ runs:
     - name: Start server
       shell: bash
       run: |
-        python3 -m http.server 3001 --bind 127.0.0.1 &
+        chmod -R a+r $INTEGRATION_APP_PATTERN
+
+        python3 -m http.server 3001 &
 
     - name: Run Cypress tests
       shell: bash
