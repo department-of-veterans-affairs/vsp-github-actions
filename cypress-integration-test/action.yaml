@@ -21,8 +21,8 @@ runs:
 
     - name: Start server
       shell: bash
+      working-directory: vets-website
       run: |
-        cd vets-website
         ls
         python3 -m http.server 3001 &
         sleep 6s
