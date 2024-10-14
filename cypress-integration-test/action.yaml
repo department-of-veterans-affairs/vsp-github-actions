@@ -6,31 +6,10 @@ inputs:
     description: The chosen app/product that will be tested.
     default: src/applications/
     required: true
-  ECR_USERNAME:
-    description: ECR username
-    default:
-    required: true
-  ECR_PASSWORD:
-    description: ECR password
-    default:
-    required: true
 
 runs:
   using: "composite"
   steps:
-    
-    - name: Configure AWS Credentials
-      uses: aws-actions/configure-aws-credentials@v4.0.0
-      with:
-        aws-region: us-gov-west-1
-          role-to-assume: arn:aws-us-gov:iam::008577686731:role/gha-frontend-nonprod-role
-        
-    - name: Login to Amazon ECR
-      id: login-ecr
-      uses: aws-actions/amazon-ecr-login@v2    
-      with:
-        mask-password: false
-
     - name: Install dependencies
       uses: ./.github/workflows/install
       with:
