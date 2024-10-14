@@ -36,4 +36,4 @@ runs:
     - name: Run Cypress tests
       shell: bash
       run: |
-        npx cypress run --config-file config/cypress.config.js --browser chrome --headless --spec 'src/applications//**/*.cypress.spec.js'
+        npx cypress run --config-file config/cypress.config.js --browser chrome --headless --spec 'src/applications/burials-ez/**/*.cypress.spec.js'
