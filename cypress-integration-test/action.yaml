@@ -28,6 +28,7 @@ runs:
     - name: Run Cypress tests
       shell: bash
       run: |
+        curl http://localhost:3001
         yarn cy:run --headless --spec "$INTEGRATION_APP_PATTERN/**/*.cypress.spec.js"  
 
 
