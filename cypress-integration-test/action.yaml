@@ -37,8 +37,10 @@ runs:
     - name: Run Cypress tests
       shell: bash
       run: |
+        cd vets-website
         python3 -m http.server 3001 &
         sleep 6s
+        cd ..
         curl http://localhost:3001
         curl http://localhost:3001/burials-memorials/veterans-burial-allowance/apply-for-allowance-form-21p-530ez
         curl http://localhost:3001/burials-memorials/veterans-burial-allowance/apply-for-allowance-form-21p-530ez/introduction
