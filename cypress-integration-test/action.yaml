@@ -19,16 +19,21 @@ runs:
         python3 -m http.server 3001 &
         sleep 6s
 
-    - name: Run cypres install
-      shell: bash
-      run: |
-        npx cypress install
+    - name: Install dependencies
+      uses: ./.github/workflows/install
+      with:
+        key: ${{ hashFiles('yarn.lock') }}
+        yarn_cache_folder: .cache/yarn
+        path: |
+          .cache/yarn
+          node_modules
+          
+#    - name: Run cypres install
+#      shell: bash
+#      run: |
+#        npx cypress install
 
     - name: Run Cypress tests
       shell: bash
       run: |
         npx cypress run --config-file config/cypress.config.js --browser chrome --headless --spec '$INTEGRATION_APP_PATTERN/**/*.cypress.spec.js'
-
-
-
-  
