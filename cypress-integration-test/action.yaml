@@ -22,8 +22,8 @@ runs:
     - name: Start server
       shell: bash
       run: |
-        ls
         python3 -m http.server 3001 &
+        python3 -help
 
     - name: Run Cypress tests
       shell: bash
