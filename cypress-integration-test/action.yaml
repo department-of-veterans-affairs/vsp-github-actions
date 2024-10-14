@@ -22,7 +22,7 @@ runs:
     - name: Start server
       shell: bash
       run: |
-        node src/platform/testing/e2e/test-server.js --build-type=vagovprod --port=3001 &
+        node src/platform/testing/e2e/test-server.js --buildtype=vagovprod --port=3001 &
         sleep 6s
 
     - name: Run Cypress tests
