@@ -12,7 +12,6 @@ runs:
   steps:
     - name: Install dependencies
       uses: ./.github/workflows/install
-      timeout-minutes: 30
       with:
         key: ${{ hashFiles('yarn.lock') }}
         yarn_cache_folder: .cache/yarn
