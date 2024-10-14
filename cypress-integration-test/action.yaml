@@ -23,7 +23,7 @@ runs:
       shell: bash
       run: |
         yarn watch &
-        curl -http://localhost:3001/
+        curl http://localhost:3001/
 
     - name: Run Cypress tests
       shell: bash
