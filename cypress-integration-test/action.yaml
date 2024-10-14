@@ -23,7 +23,7 @@ runs:
       shell: bash
       run: |
         yarn watch &
-        sleep 10
+        sleep 6s
 
     - name: Run Cypress tests
       shell: bash
