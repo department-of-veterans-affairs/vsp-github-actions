@@ -22,6 +22,7 @@ runs:
     - name: Start server
       shell: bash
       run: |
+        cd ..
         ls
         python3 -m http.server 3001 &
         sleep 6s
