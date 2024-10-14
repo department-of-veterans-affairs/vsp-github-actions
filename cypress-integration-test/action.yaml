@@ -22,6 +22,7 @@ runs:
     - name: Run Cypress tests
       shell: bash
       run: |
+        export CYPRESS_INSTALL_BINARY=13.13.2
         npx cypress install
         npx cypress run --config-file config/cypress.config.js --browser chrome --headless --spec '$INTEGRATION_APP_PATTERN/**/*.cypress.spec.js'
 
