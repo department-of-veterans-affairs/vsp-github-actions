@@ -10,15 +10,6 @@ inputs:
 runs:
   using: "composite"
   steps:
-    
-#    - name: Start server
-#      shell: bash
-#      working-directory: vets-website
-#      run: |
-#        ls
-#        python3 -m http.server 3001 &
-#        sleep 6s
-#        curl http://localhost:3001/
 
     - name: Install dependencies
       uses: ./.github/workflows/install
@@ -35,10 +26,6 @@ runs:
       run: |
         yarn install
 
-#    - name: Run cypres install
-#      shell: bash
-#      run: |
-#        npx cypress install
     - name: Start server
       shell: bash
       run: |
@@ -47,7 +34,4 @@ runs:
     - name: Run Cypress tests
       shell: bash
       run: |
-        curl http://localhost:3001
-        curl http://localhost:3001/burials-memorials/veterans-burial-allowance/apply-for-allowance-form-21p-530ez
-        curl http://localhost:3001/burials-memorials/veterans-burial-allowance/apply-for-allowance-form-21p-530ez/introduction
-        npx cypress run --config-file config/cypress.config.js --browser chrome --headless --spec 'src/applications/burials-ez/**/*.cypress.spec.js'
+        npx cypress run --config-file config/cypress.config.js --browser chrome --headless --spec '$INTEGRATION_APP_PATTERN/**/*.cypress.spec.js'
