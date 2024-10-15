@@ -28,7 +28,13 @@ runs:
         path: |
           .cache/yarn
           node_modules
-          
+
+    - name: Install server dependencies
+      shell: bash
+      working-directory: vets-website
+      run: |
+        yarn install
+
 #    - name: Run cypres install
 #      shell: bash
 #      run: |
@@ -38,7 +44,7 @@ runs:
       shell: bash
       run: |
         cd vets-website
-        python3 -m http.server 3001 &
+        node ../../src/platform/testing/e2e/test-server.js --port 3001 &
         sleep 6s
         cd ..
         curl http://localhost:3001
