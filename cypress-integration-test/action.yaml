@@ -39,14 +39,13 @@ runs:
 #      shell: bash
 #      run: |
 #        npx cypress install
-
+    - name: Start server
+      run: |
+        mkdir build
+        node src/platform/testing/e2e/test-server.js --buildtype=../vets-website --port=3001 &
     - name: Run Cypress tests
       shell: bash
       run: |
-        cd vets-website
-        node ../../../src/platform/testing/e2e/test-server.js --port 3001 &
-        sleep 6s
-        cd ..
         curl http://localhost:3001
         curl http://localhost:3001/burials-memorials/veterans-burial-allowance/apply-for-allowance-form-21p-530ez
         curl http://localhost:3001/burials-memorials/veterans-burial-allowance/apply-for-allowance-form-21p-530ez/introduction
