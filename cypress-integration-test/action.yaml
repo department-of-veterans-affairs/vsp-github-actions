@@ -35,3 +35,9 @@ runs:
       shell: bash
       run: |
         npx cypress run --config-file config/cypress.config.js --browser chrome --headless --spec 'src/applications/burials-ez/**/*.cypress.spec.js'
+
+# Emergency storage for the original workflow's call to this action
+#   - name: Call reusable action
+#           id: cypress-action
+#           uses: department-of-veterans-affairs/vsp-github-actions/cypress-integration-test@cypress-integration-test-migration
+          
