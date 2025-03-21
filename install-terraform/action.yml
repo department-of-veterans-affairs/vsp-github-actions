@@ -19,7 +19,7 @@ runs:
             unzip -o ./terraformzip.zip 
             ls
             
-            echo ./ >> $GITHUB_PATH
+            echo ./terraform >> $GITHUB_PATH
 
       - name: Tooling Version Check
         shell: bash
