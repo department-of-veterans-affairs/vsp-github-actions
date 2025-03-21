@@ -11,11 +11,11 @@ runs:
         run: |
             wget \
             -q \
-            -O ~/bin/terraformzip.zip \
+            -O ./terraformzip.zip \
             "https://releases.hashicorp.com/terraform/${{ inputs.tf_version }}/terraform_${{ inputs.tf_version }}_linux_amd64.zip"
-            unzip -o ~/bin/terraformzip.zip -d ~/bin
+            unzip -o ./terraformzip.zip 
             
-            echo ~/bin >> $GITHUB_PATH
+            echo ./ >> $GITHUB_PATH
 
       - name: Tooling Version Check
         shell: bash
