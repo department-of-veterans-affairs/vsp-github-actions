@@ -1,0 +1,24 @@
+name: "Terraform Setup"
+description: "Installs Terraform"
+inputs:
+  tf_version:
+    description: "Terraform version to install"
+runs:
+  using: "composite"
+  steps:
+      - name: "Install Terraform ${{ inputs.tf_version }}"
+        shell: bash
+        run: |
+            wget \
+            -q \
+            -O ./terraformzip.zip \
+            "https://releases.hashicorp.com/terraform/${{ inputs.tf_version }}/terraform_${{ inputs.tf_version }}_linux_amd64.zip"
+            unzip -o ./terraformzip.zip 
+            
+            echo ./ >> $GITHUB_PATH
+
+      - name: Tooling Version Check
+        shell: bash
+        run: |
+          terraform -v
+
