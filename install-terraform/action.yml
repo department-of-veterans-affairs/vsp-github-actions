@@ -13,7 +13,7 @@ runs:
             -q \
             -O ./terraformzip.zip \
             "https://releases.hashicorp.com/terraform/${{ inputs.tf_version }}/terraform_${{ inputs.tf_version }}_linux_amd64.zip"
-            unzip -o ./terraformzip.zip 
+            unzip -o ./terraformzip.zip -d ./
             
             echo ./ >> $GITHUB_PATH
 
