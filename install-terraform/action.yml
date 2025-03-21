@@ -15,6 +15,7 @@ runs:
             -O ./terraformzip.zip \
             "https://releases.hashicorp.com/terraform/${{ inputs.tf_version }}/terraform_${{ inputs.tf_version }}_linux_amd64.zip"
             ls ./
+            pwd
             unzip -o ./terraformzip.zip -d ./
             
             echo ./ >> $GITHUB_PATH
