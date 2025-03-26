@@ -9,13 +9,14 @@ runs:
       - name: "Install Terraform ${{ inputs.tf_version }}"
         shell: bash
         run: |
+            mkdir ./bin
             wget \
             -q \
-            -O ./terraformzip.zip \
+            -O ./bin/terraformzip.zip \
             "https://releases.hashicorp.com/terraform/${{ inputs.tf_version }}/terraform_${{ inputs.tf_version }}_linux_amd64.zip"
-            unzip -o ./terraformzip.zip 
-            
-            echo ./ >> $GITHUB_PATH
+            unzip -o ./bin/terraformzip.zip -d ./bin
+            pwd
+            echo $(pwd)/bin >> $GITHUB_PATH
 
       - name: Tooling Version Check
         shell: bash
