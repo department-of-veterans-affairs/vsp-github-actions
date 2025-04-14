@@ -57,7 +57,7 @@ jobs:
           # echo docker build -t $REGISTRY/$REPOSITORY:$IMAGE_TAG .
           echo docker push $REGISTRY/$REPOSITORY:$IMAGE_TAG
           
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
       - name: Debug Out
         run: |
           env
