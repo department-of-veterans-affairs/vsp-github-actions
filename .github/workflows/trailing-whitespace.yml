@@ -1,0 +1,9 @@
+name: Check for trailing whitespace
+run-name: Check for trailing whitespace
+
+on:
+  pull_request:
+
+jobs:
+  check-for-trailing-whitespace:
+    uses: department-of-veterans-affairs/vsp-github-actions/trailing-whitespace@94236ddb87d2433988668100164716f40a908368
