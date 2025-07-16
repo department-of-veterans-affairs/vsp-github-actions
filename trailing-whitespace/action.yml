@@ -1,0 +1,33 @@
+name: "Comment a Plan on a PR"
+
+on:
+  pull_request:
+
+jobs:
+  setup:
+    name: Check for trailing whitespace
+    runs-on: ubuntu-latest
+    steps:
+      - id: trailing-whitespace
+        run: |
+          excludes=':(exclude)*.crt :(exclude)*.csv :(exclude)*/.terraform.lock.hcl'
+          git_flags='--name-only --diff-filter=AM'
+          file_list=($(git diff $git_flags $excludes) $(git diff --staged $git_flags $excludes))
+
+          printf 'Checking:\n'
+          printf '\u2023 %s\n' "${file_list[@]}"
+
+          # Check for trailing whitespace
+          trailing_whitespace=($(grep --perl-regexp --binary-files=without-match --files-with-match '\s+$' "${file_list[@]}"))
+
+          # Redirect output to stderr.
+          exec 1>&2
+
+          if [[ ${#trailing_whitespace[@]} != 0 ]] ; then
+            printf '\n\u2716 Trailing whitespace(s) found\n'
+            grep --perl-regexp --binary-files=without-match --line-number --with-filename '\s+$' "${trailing_whitespace[@]}"
+            exit 1
+          else
+            printf '\n\u2714 No trailing whitespace detected\n\n'
+            exit 0
+          fi
