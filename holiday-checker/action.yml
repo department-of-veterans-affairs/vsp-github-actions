@@ -1,12 +1,12 @@
-name: Holiday Checker
-description: A GitHub Action that checks if today is a holiday and outputs a true/false result.
+name: Freeze Day Checker
+description: A GitHub Action that checks if today is a freeze day and outputs a true/false result.
 outputs:
   is_holiday:
-    description: 'True if today is a holiday, otherwise False'
-    value: ${{ steps.holiday-check.outputs.is_holiday }}
+    description: 'True if today is a freeze day, otherwise False'
+    value: ${{ steps.freeze-check.outputs.is_freeze }}
 inputs:
-  holidays:
-    description: 'List of Holidays in YYYY-MM-DD format'
+  freeze_days:
+    description: 'List of Freeze Days in YYYY-MM-DD format'
     default: >
       2025-01-01
       2025-01-02
@@ -67,28 +67,28 @@ inputs:
 runs:
   using: 'composite'
   steps:
-    - name: Is Today a Holiday
-      id: holiday-check
+    - name: Is Today a Freeze Day
+      id: freeze-check
       shell: bash
       run: |
         TODAY=$(TZ='America/New_York' date +"%Y-%m-%d")
-        DATES=(${{ inputs.holidays }})
-        IS_HOLIDAY="false"
+        DATES=(${{ inputs.freeze_days }})
+        IS_FREEZE="false"
 
         for date in "${DATES[@]}"
         do
           if [[ "${date}" == "${TODAY}" ]]
           then
-            IS_HOLIDAY="true"
+            IS_FREEZE="true"
             break
           fi
         done
 
-        echo "is_holiday=${IS_HOLIDAY}" >> $GITHUB_OUTPUT
+        echo "is_freeze=${IS_FREEZE}" >> $GITHUB_OUTPUT
 
-        if [[ "${IS_HOLIDAY}" == "true" ]]
+        if [[ "${IS_FREEZE}" == "true" ]]
         then
-          echo "Today (${TODAY}, Eastern Time Zone) is a holiday."
+          echo "Today (${TODAY}, Eastern Time Zone) is a freeze day."
         else
-          echo "Today (${TODAY}, Eastern Time Zone) is not a holiday."
+          echo "Today (${TODAY}, Eastern Time Zone) is not a freeze day."
         fi
