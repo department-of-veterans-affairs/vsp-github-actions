@@ -1,15 +1,12 @@
-name: Freeze Day Checker
-description: A GitHub Action that checks if today is a freeze day and outputs a true/false result.
+name: Holiday Checker
+description: A GitHub Action that checks if today is a holiday and outputs a true/false result.
 outputs:
   is_holiday:
-    description: 'True if today is a freeze day, otherwise False'
-    value: ${{ steps.freeze-check.outputs.is_freeze }}
-  is_freeze:
-    description: 'True if today is a freeze day, otherwise False'
-    value: ${{ steps.freeze-check.outputs.is_freeze }}
+    description: 'True if today is a holiday, otherwise False'
+    value: ${{ steps.holiday-check.outputs.is_holiday }}
 inputs:
-  freeze_days:
-    description: 'List of Freeze Days in YYYY-MM-DD format'
+  holidays:
+    description: 'List of Holidays in YYYY-MM-DD format'
     default: >
       2025-01-01
       2025-01-02
@@ -70,29 +67,28 @@ inputs:
 runs:
   using: 'composite'
   steps:
-    - name: Is Today a Freeze Day
-      id: freeze-check
+    - name: Is Today a Holiday
+      id: holiday-check
       shell: bash
       run: |
         TODAY=$(TZ='America/New_York' date +"%Y-%m-%d")
-        DATES=(${{ inputs.freeze_days }})
-        IS_FREEZE="false"
+        DATES=(${{ inputs.holidays }})
+        IS_HOLIDAY="false"
 
         for date in "${DATES[@]}"
         do
           if [[ "${date}" == "${TODAY}" ]]
           then
-            IS_FREEZE="true"
+            IS_HOLIDAY="true"
             break
           fi
         done
 
-        echo "is_holiday=${IS_FREEZE}" >> $GITHUB_OUTPUT
-        echo "is_freeze=${IS_FREEZE}" >> $GITHUB_OUTPUT
+        echo "is_holiday=${IS_HOLIDAY}" >> $GITHUB_OUTPUT
 
-        if [[ "${IS_FREEZE}" == "true" ]]
+        if [[ "${IS_HOLIDAY}" == "true" ]]
         then
-          echo "Today (${TODAY}, Eastern Time Zone) is a freeze day."
+          echo "Today (${TODAY}, Eastern Time Zone) is a holiday."
         else
-          echo "Today (${TODAY}, Eastern Time Zone) is not a freeze day."
+          echo "Today (${TODAY}, Eastern Time Zone) is not a holiday."
         fi
