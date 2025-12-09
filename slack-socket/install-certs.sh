@@ -25,7 +25,9 @@ for CERT in ${CA_CERTS[@]}
 do
   echo "Installing $CERT"
   OUT=$ADDITIONAL_CA_CERTS/${CERT##*/}
-  test 200 == "$(curl -sw %{http_code} $CERT -o $OUT)"
+  until test 200 == "$(curl -sw %{http_code} $CERT -o $OUT)"; do
+    echo "retrying"
+  done
 done
 for cert in $(find $ADDITIONAL_CA_CERTS -type f -name "*.cer")
   do
