@@ -53,10 +53,16 @@ jobs:
         ${{ inputs.artifact_name }}-sbom.single.json 
 
     - name: Copy SBOM to Bucket
-      run: >- 
-        aws s3 cp 
-        "${{ inputs.artifact_name }}-sbom.single.json" 
+      run: >-
+        aws s3 cp
+        "${{ inputs.artifact_name }}-sbom.single.json"
         "${{ inputs.output_bucket }}/${{ inputs.artifact_name }}-$(date +%Y-%m-%d).json"
+
+    - name: Copy SBOM as latest
+      run: >-
+        aws s3 cp
+        "${{ inputs.artifact_name }}-sbom.single.json"
+        "${{ inputs.output_bucket }}/${{ inputs.artifact_name }}-latest.json"
 
     - name: Generate CSV summary
       if: ${{ inputs.generate_csv }}
@@ -73,7 +79,14 @@ jobs:
 
     - name: Copy CSV to Bucket
       if: ${{ inputs.generate_csv }}
-      run: >- 
-        aws s3 cp 
-        "${{ inputs.artifact_name }}-sbom.csv" 
+      run: >-
+        aws s3 cp
+        "${{ inputs.artifact_name }}-sbom.csv"
         "${{ inputs.output_bucket }}/${{ inputs.artifact_name }}-$(date +%Y-%m-%d).csv"
+
+    - name: Copy CSV as latest
+      if: ${{ inputs.generate_csv }}
+      run: >-
+        aws s3 cp
+        "${{ inputs.artifact_name }}-sbom.csv"
+        "${{ inputs.output_bucket }}/${{ inputs.artifact_name }}-latest.csv"
