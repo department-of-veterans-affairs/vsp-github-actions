@@ -1,0 +1,92 @@
+name: Library SBOM Generation
+
+on:
+  workflow_call:
+    inputs:
+      artifact_name:
+        type: string
+        required: true
+        default: "whoops"
+      output_bucket:
+        type: string
+        required: true
+        default: "whoops"
+      scan_path:
+        type: string
+        required: false
+        default: "."
+      generate_csv:
+        type: boolean
+        required: false
+        default: true
+
+jobs:
+  build:
+    permissions:
+      id-token: write
+      contents: read
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v4
+    - name: Configure AWS Credentials with OIDC
+      uses: aws-actions/configure-aws-credentials@v4
+      with:
+        aws-region: us-gov-west-1
+        role-to-assume: ${{ vars.AWS_ASSUME_ROLE }}
+
+    - name: Run Trivy vulnerability scanner
+      uses: aquasecurity/trivy-action@0.33.1
+      continue-on-error: true
+      with:
+        scan-type: fs
+        format: 'cyclonedx'
+        output: ${{ inputs.artifact_name }}-sbom.json
+        scanners: vuln
+        scan-ref: ${{ inputs.scan_path }}
+        list-all-pkgs: true
+
+    - name: Convert to one line JSON
+      run: >- 
+        cat ${{ inputs.artifact_name }}-sbom.json 
+        | tr -d \\n 
+        | tr -d " " > 
+        ${{ inputs.artifact_name }}-sbom.single.json 
+
+    - name: Copy SBOM to Bucket
+      run: >-
+        aws s3 cp
+        "${{ inputs.artifact_name }}-sbom.single.json"
+        "${{ inputs.output_bucket }}/${{ inputs.artifact_name }}-$(date +%Y-%m-%d).json"
+
+    - name: Copy SBOM as latest
+      run: >-
+        aws s3 cp
+        "${{ inputs.artifact_name }}-sbom.single.json"
+        "${{ inputs.output_bucket }}/${{ inputs.artifact_name }}-latest.json"
+
+    - name: Generate CSV summary
+      if: ${{ inputs.generate_csv }}
+      run: |
+        echo "name,version,vulnerabilities" > ${{ inputs.artifact_name }}-sbom.csv
+        jq -r '
+          .components // [] | .[] |
+          [
+            .name,
+            .version,
+            ((.vulnerabilities // []) | map(.id) | join(";"))
+          ] | @csv
+        ' ${{ inputs.artifact_name }}-sbom.json >> ${{ inputs.artifact_name }}-sbom.csv
+
+    - name: Copy CSV to Bucket
+      if: ${{ inputs.generate_csv }}
+      run: >-
+        aws s3 cp
+        "${{ inputs.artifact_name }}-sbom.csv"
+        "${{ inputs.output_bucket }}/${{ inputs.artifact_name }}-$(date +%Y-%m-%d).csv"
+
+    - name: Copy CSV as latest
+      if: ${{ inputs.generate_csv }}
+      run: >-
+        aws s3 cp
+        "${{ inputs.artifact_name }}-sbom.csv"
+        "${{ inputs.output_bucket }}/${{ inputs.artifact_name }}-latest.csv"
