@@ -44,7 +44,8 @@ jobs:
       with:
         image-ref: '${{ inputs.ecr_repo_name }}/${{ inputs.image_name }}:${{ inputs.image_tag }}'
         format: 'cyclonedx'
-        output: "${{ inputs.image_name }}-${{ inputs.image_tag }}.json" 
+        output: "${{ inputs.image_name }}-${{ inputs.image_tag }}.json"
+        scanners: vuln
         list-all-pkgs: true
 
     - name: Convert to one line JSON
