@@ -1,1 +1,221 @@
-#initial pipeline commit 
+name: Enhanced Reusable Docker Build & Scan
+
+on:
+  workflow_call:
+    inputs:
+      # Image Configuration
+      image-name:
+        description: 'Name of the Docker image'
+        required: true
+        type: string
+      image-tag-prefix:
+        description: 'Prefix for the image tag'
+        required: false
+        type: string
+        default: 'pipeline-'
+      use-branch-tag:
+        description: 'Include branch name in tag'
+        required: false
+        type: boolean
+        default: false
+      dockerfile-path:
+        description: 'Path to Dockerfile'
+        required: false
+        type: string
+        default: 'Dockerfile'
+      build-context:
+        description: 'Docker build context'
+        required: false
+        type: string
+        default: '.'
+      build-args:
+        description: 'Docker build arguments (JSON format)'
+        required: false
+        type: string
+        default: '{}'
+      push-image:
+        description: 'Push image to registry'
+        required: false
+        type: boolean
+        default: true
+      
+      # AWS Configuration
+      aws-region:
+        description: 'AWS region for ECR'
+        required: true
+        type: string
+
+      run-trivy-scan:
+        description: 'Run Trivy security scan'
+        required: false
+        type: boolean
+        default: true      
+      # Runner Configuration
+      runs-on:
+        description: 'Runner to use'
+        required: false
+        type: string
+        default: 'ubuntu-22.04'
+        
+    secrets:
+      ECR_REPOSITORY:
+        description: 'ECR Repository name'
+        required: true
+      AWS_ASSUME_ROLE:
+        description: 'AWS IAM role to assume'
+        required: true
+      DOCKER_BUILD_SECRETS:
+        description: 'Docker build secrets (JSON format)'
+        required: false
+        
+    outputs:
+      image-tag:
+        description: 'The full image tag that was built'
+        value: ${{ jobs.build.outputs.image-tag }}
+      image-digest:
+        description: 'The image digest'
+        value: ${{ jobs.build.outputs.image-digest }}
+      trivy-results:
+        description: 'Path to Trivy results'
+        value: ${{ jobs.scan.outputs.trivy-results }}
+
+permissions:
+  id-token: write
+  contents: read
+  security-events: write
+  actions: read
+
+jobs:
+  build:
+    name: Build and Push Docker Image
+    runs-on: ${{ inputs.runs-on }}
+    
+    outputs:
+      image-tag: ${{ steps.meta.outputs.image-tag }}
+      image-digest: ${{ steps.build.outputs.digest }}
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Generate image metadata
+        id: meta
+        run: |
+          # Generate base tag from SHA
+          SHA_TAG=${GITHUB_SHA::7}
+          
+          # Add prefix if provided
+          if [ -n "${{ inputs.image-tag-prefix }}" ]; then
+            TAG="${{ inputs.image-tag-prefix }}${SHA_TAG}"
+          else
+            TAG="$SHA_TAG"
+          fi
+          
+          # Add branch name if requested
+          if [ "${{ inputs.use-branch-tag }}" = "true" ]; then
+            BRANCH_NAME=${GITHUB_REF#refs/heads/}
+            BRANCH_NAME=${BRANCH_NAME//\//-}  # Replace / with -
+            TAG="$BRANCH_NAME-$TAG"
+          fi
+          
+          # Add PR number if this is a PR
+          if [ "${{ github.event_name }}" = "pull_request" ]; then
+            TAG="pr-${{ github.event.pull_request.number }}-$TAG"
+          fi
+          
+          echo "image-tag=$TAG" >> $GITHUB_OUTPUT
+          echo "Generated tag: $TAG"
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          role-to-assume: ${{ secrets.AWS_ASSUME_ROLE }}
+          aws-region: ${{ inputs.aws-region }}
+
+      - name: Login to Amazon ECR
+        id: login-ecr
+        uses: aws-actions/amazon-ecr-login@v2
+
+      - name: Build Docker image
+        id: build
+        env:
+          ECR_REGISTRY: ${{ steps.login-ecr.outputs.registry }}
+          ECR_REPOSITORY: ${{ secrets.ECR_REPOSITORY }}
+          IMAGE_TAG: ${{ steps.meta.outputs.image-tag }}
+        run: |
+          echo "Building image: $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG"
+          docker build -t $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG \
+            -f ${{ inputs.dockerfile-path }} \
+            ${{ inputs.build-context }}
+          
+          # Set a placeholder digest (will be updated after push if needed)
+          echo "digest=pending" >> $GITHUB_OUTPUT
+
+      - name: Push Docker image
+        if: inputs.push-image
+        env:
+          ECR_REGISTRY: ${{ steps.login-ecr.outputs.registry }}
+          ECR_REPOSITORY: ${{ secrets.ECR_REPOSITORY }}
+          IMAGE_TAG: ${{ steps.meta.outputs.image-tag }}
+        run: |
+          echo "Pushing image: $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG"
+          docker push $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG
+          
+          # Get the actual digest after push
+          DIGEST=$(docker inspect --format='{{index .RepoDigests 0}}' $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG 2>/dev/null | cut -d@ -f2 || echo "")
+          if [ -n "$DIGEST" ]; then
+            echo "digest=$DIGEST" >> "${{ steps.build.outputs }}"
+          fi
+
+  scan:
+    name: Security Scan
+    if: inputs.run-trivy-scan
+    needs: build
+    runs-on: ${{ inputs.runs-on }}
+    timeout-minutes: 30
+
+    outputs:
+      trivy-results: trivy-results.sarif
+
+    steps:
+      - uses: actions/checkout@v4
+      
+      - name: Configure AWS Credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          role-to-assume: ${{ secrets.AWS_ASSUME_ROLE }}
+          aws-region: ${{ inputs.aws-region }}
+
+      - name: Login to Amazon ECR
+        id: login-ecr-scan
+        uses: aws-actions/amazon-ecr-login@v2
+        with:
+          mask-password: true
+
+      - name: Pull image from ECR
+        env:
+          ECR_REGISTRY: ${{ steps.login-ecr-scan.outputs.registry }}
+          ECR_REPOSITORY: ${{ secrets.ECR_REPOSITORY }}
+          IMAGE_TAG: ${{ needs.build.outputs.image-tag }}
+        run: |
+          echo "Pulling image: $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG"
+          docker pull $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG
+
+      - name: Run Trivy vulnerability scanner (SARIF)
+        uses: aquasecurity/trivy-action@0.24.0
+        with:
+          image-ref: ${{ steps.login-ecr-scan.outputs.registry }}/${{ secrets.ECR_REPOSITORY }}:${{ needs.build.outputs.image-tag }}
+          format: sarif
+          output: trivy-results.sarif
+          severity: HIGH,CRITICAL
+          ignore-unfixed: true
+          vuln-type: os,library
+          scanners: vuln
+
+      - name: Upload Trivy scan results to GitHub Security tab
+        uses: github/codeql-action/upload-sarif@v4
+        with:
+          sarif_file: trivy-results.sarif
