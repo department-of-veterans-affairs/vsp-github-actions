@@ -1,11 +1,30 @@
 name: Enhanced Reusable Docker Build & Scan
+#########################################################################################################
+### example use
+# name: Build and Deploy
 
+# on:
+#   push:
+#     branches: [main]
+#   pull_request:
+#     branches: [main]
+
+# jobs:
+#   build:
+#     uses: MYORG/MYREPO/.github/workflows/consolidated-security-pipeline.yml@pipeline-workflow-testing
+#     with:
+#       image-name: vets-api-pipeline-testing
+#       aws-region: us-gov-west-1
+#     secrets:
+#       ECR_REPOSITORY: ${{ secrets.ECR_REPOSITORY }}
+#       AWS_ASSUME_ROLE: ${{ vars.AWS_ASSUME_ROLE }}
+#########################################################################################################
 on:
   workflow_call:
     inputs:
       # Image Configuration
       image-name:
-        description: 'Name of the Docker image'
+        description: 'Name of the Docker image (used in tag)'
         required: true
         type: string
       image-tag-prefix:
@@ -49,7 +68,8 @@ on:
         description: 'Run Trivy security scan'
         required: false
         type: boolean
-        default: true      
+        default: true
+      
       # Runner Configuration
       runs-on:
         description: 'Runner to use'
@@ -64,9 +84,6 @@ on:
       AWS_ASSUME_ROLE:
         description: 'AWS IAM role to assume'
         required: true
-      DOCKER_BUILD_SECRETS:
-        description: 'Docker build secrets (JSON format)'
-        required: false
         
     outputs:
       image-tag:
@@ -92,7 +109,7 @@ jobs:
     
     outputs:
       image-tag: ${{ steps.meta.outputs.image-tag }}
-      image-digest: ${{ steps.build.outputs.digest }}
+      image-digest: ${{ steps.push.outputs.digest || steps.build.outputs.digest }}
 
     steps:
       - name: Checkout code
@@ -139,36 +156,34 @@ jobs:
         id: login-ecr
         uses: aws-actions/amazon-ecr-login@v2
 
-      - name: Build Docker image
-        id: build
-        env:
-          ECR_REGISTRY: ${{ steps.login-ecr.outputs.registry }}
-          ECR_REPOSITORY: ${{ secrets.ECR_REPOSITORY }}
-          IMAGE_TAG: ${{ steps.meta.outputs.image-tag }}
+      - name: Prepare build args
+        id: build-args
         run: |
-          echo "Building image: $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG"
-          docker build -t $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG \
-            -f ${{ inputs.dockerfile-path }} \
-            ${{ inputs.build-context }}
-          
-          # Set a placeholder digest (will be updated after push if needed)
-          echo "digest=pending" >> $GITHUB_OUTPUT
-
-      - name: Push Docker image
-        if: inputs.push-image
-        env:
-          ECR_REGISTRY: ${{ steps.login-ecr.outputs.registry }}
-          ECR_REPOSITORY: ${{ secrets.ECR_REPOSITORY }}
-          IMAGE_TAG: ${{ steps.meta.outputs.image-tag }}
-        run: |
-          echo "Pushing image: $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG"
-          docker push $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG
-          
-          # Get the actual digest after push
-          DIGEST=$(docker inspect --format='{{index .RepoDigests 0}}' $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG 2>/dev/null | cut -d@ -f2 || echo "")
-          if [ -n "$DIGEST" ]; then
-            echo "digest=$DIGEST" >> "${{ steps.build.outputs }}"
+          if [ "${{ inputs.build-args }}" != "{}" ]; then
+            BUILD_ARGS=$(echo '${{ inputs.build-args }}' | jq -r 'to_entries | map("--build-arg \(.key)=\(.value)") | join(" ")')
+            echo "args=$BUILD_ARGS" >> $GITHUB_OUTPUT
+          else
+            echo "args=" >> $GITHUB_OUTPUT
           fi
+
+      - name: Build and Push Docker image
+        uses: docker/build-push-action@v5
+        id: docker-build
+        with:
+          context: ${{ inputs.build-context }}
+          file: ${{ inputs.dockerfile-path }}
+          push: ${{ inputs.push-image }}
+          tags: ${{ steps.login-ecr.outputs.registry }}/${{ secrets.ECR_REPOSITORY }}:${{ steps.meta.outputs.image-tag }}
+          build-args: ${{ inputs.build-args }}
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+          outputs: type=image,name=${{ steps.login-ecr.outputs.registry }}/${{ secrets.ECR_REPOSITORY }},name-canonical=true,push=${{ inputs.push-image }}
+
+      - name: Export digest
+        id: push
+        if: inputs.push-image
+        run: |
+          echo "digest=${{ steps.docker-build.outputs.digest }}" >> $GITHUB_OUTPUT
 
   scan:
     name: Security Scan
@@ -181,8 +196,9 @@ jobs:
       trivy-results: trivy-results.sarif
 
     steps:
-      - uses: actions/checkout@v4
-      
+      - name: Checkout code
+        uses: actions/checkout@v4
+
       - name: Configure AWS Credentials
         uses: aws-actions/configure-aws-credentials@v4
         with:
@@ -195,16 +211,7 @@ jobs:
         with:
           mask-password: true
 
-      - name: Pull image from ECR
-        env:
-          ECR_REGISTRY: ${{ steps.login-ecr-scan.outputs.registry }}
-          ECR_REPOSITORY: ${{ secrets.ECR_REPOSITORY }}
-          IMAGE_TAG: ${{ needs.build.outputs.image-tag }}
-        run: |
-          echo "Pulling image: $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG"
-          docker pull $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG
-
-      - name: Run Trivy vulnerability scanner (SARIF)
+      - name: Run Trivy vulnerability scanner
         uses: aquasecurity/trivy-action@0.24.0
         with:
           image-ref: ${{ steps.login-ecr-scan.outputs.registry }}/${{ secrets.ECR_REPOSITORY }}:${{ needs.build.outputs.image-tag }}
