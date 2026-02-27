@@ -11,7 +11,7 @@ name: Enhanced Reusable Docker Build & Scan
 
 # jobs:
 #   build:
-#     uses: MYORG/MYREPO/.github/workflows/consolidated-security-pipeline.yml@pipeline-workflow-testing
+#     uses: MYORG/MYREPO/.github/workflows/security-pipeline.yml@main
 #     with:
 #       image-name: MYIMAGENAME
 #       aws-region: us-gov-west-1
@@ -106,7 +106,6 @@ jobs:
   build:
     name: Build and Push Docker Image
     runs-on: ${{ inputs.runs-on }}
-    
     outputs:
       image-tag: ${{ steps.meta.outputs.image-tag }}
       image-digest: ${{ steps.push.outputs.digest || steps.build.outputs.digest }}
@@ -174,7 +173,7 @@ jobs:
           file: ${{ inputs.dockerfile-path }}
           push: ${{ inputs.push-image }}
           tags: ${{ steps.login-ecr.outputs.registry }}/${{ secrets.ECR_REPOSITORY }}:${{ steps.meta.outputs.image-tag }}
-          build-args: ${{ inputs.build-args }}
+          build-args: ${{ steps.build-args.outputs.args }}
           cache-from: type=gha
           cache-to: type=gha,mode=max
           outputs: type=image,name=${{ steps.login-ecr.outputs.registry }}/${{ secrets.ECR_REPOSITORY }},name-canonical=true,push=${{ inputs.push-image }}
@@ -190,10 +189,7 @@ jobs:
     if: inputs.run-trivy-scan
     needs: build
     runs-on: ${{ inputs.runs-on }}
-    timeout-minutes: 30
-
-    outputs:
-      trivy-results: trivy-results.sarif
+    timeout-minutes: 3
 
     steps:
       - name: Checkout code
