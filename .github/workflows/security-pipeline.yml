@@ -159,8 +159,11 @@ jobs:
         id: build-args
         run: |
           if [ "${{ inputs.build-args }}" != "{}" ]; then
-            BUILD_ARGS=$(echo '${{ inputs.build-args }}' | jq -r 'to_entries | map("--build-arg \(.key)=\(.value)") | join(" ")')
-            echo "args=$BUILD_ARGS" >> $GITHUB_OUTPUT
+            # Safely parse JSON and format for docker/build-push-action
+            BUILD_ARGS=$(printf '%s' '${{ inputs.build-args }}' | jq -r 'to_entries | map("\(.key)=\(.value)") | join("\n")')
+            echo "args<<EOF" >> $GITHUB_OUTPUT
+            echo "$BUILD_ARGS" >> $GITHUB_OUTPUT
+            echo "EOF" >> $GITHUB_OUTPUT
           else
             echo "args=" >> $GITHUB_OUTPUT
           fi
@@ -173,7 +176,8 @@ jobs:
           file: ${{ inputs.dockerfile-path }}
           push: ${{ inputs.push-image }}
           tags: ${{ steps.login-ecr.outputs.registry }}/${{ secrets.ECR_REPOSITORY }}:${{ steps.meta.outputs.image-tag }}
-          build-args: ${{ steps.build-args.outputs.args }}
+          build-args: |
+            ${{ steps.build-args.outputs.args }}
           cache-from: type=gha
           cache-to: type=gha,mode=max
           outputs: type=image,name=${{ steps.login-ecr.outputs.registry }}/${{ secrets.ECR_REPOSITORY }},name-canonical=true,push=${{ inputs.push-image }}
@@ -189,7 +193,7 @@ jobs:
     if: inputs.run-trivy-scan
     needs: build
     runs-on: ${{ inputs.runs-on }}
-    timeout-minutes: 3
+    timeout-minutes: 30
 
     steps:
       - name: Checkout code
