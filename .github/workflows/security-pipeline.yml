@@ -11,7 +11,7 @@ name: Enhanced Reusable Docker Build & Scan
 
 # jobs:
 #   build:
-#     uses: MYORG/MYREPO/.github/workflows/security-pipeline.yml@main
+#     uses: department-of-veterans-affairs/vsp-github-actions/.github/workflows/security-pipeline.yml@main
 #     with:
 #       image-name: MYIMAGENAME
 #       aws-region: us-gov-west-1
