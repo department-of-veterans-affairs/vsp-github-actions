@@ -89,9 +89,6 @@ on:
       image-tag:
         description: 'The full image tag that was built'
         value: ${{ jobs.build.outputs.image-tag }}
-      image-digest:
-        description: 'The image digest'
-        value: ${{ jobs.build.outputs.image-digest }}
       trivy-results:
         description: 'Path to Trivy results'
         value: ${{ jobs.scan.outputs.trivy-results }}
@@ -108,7 +105,6 @@ jobs:
     runs-on: ${{ inputs.runs-on }}
     outputs:
       image-tag: ${{ steps.meta.outputs.image-tag }}
-      image-digest: ${{ steps.push.outputs.digest || steps.build.outputs.digest }}
 
     steps:
       - name: Checkout code
