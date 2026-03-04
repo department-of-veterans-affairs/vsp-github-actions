@@ -73,11 +73,21 @@ on:
         required: false
         type: boolean
         default: true
+      trivy-scan-filename:
+        description: 'trivy scan sarif file name'
+        required: false
+        type: string
+        default: 'trivy-results.sarif'
       run-brakeman-scan:
         description: 'Run Brakeman static analysis scan (Ruby/Rails only)'
         required: false
         type: boolean
         default: false
+      brakeman-scan-filename:
+        description: 'brakeman scan sarif file name'
+        required: false
+        type: string
+        default: 'brakeman-results.sarif'  
       run-codeql-scan:
         description: 'Run CodeQL static analysis scan'
         required: false
@@ -197,20 +207,12 @@ jobs:
           cache-to: type=gha,mode=max
           outputs: type=image,name=${{ steps.login-ecr.outputs.registry }}/${{ secrets.ECR_REPOSITORY }},name-canonical=true,push=${{ inputs.push-image }}
 
-      - name: Export digest
-        id: push
-        if: inputs.push-image
-        run: |
-          echo "digest=${{ steps.docker-build.outputs.digest }}" >> $GITHUB_OUTPUT
-
   trivy-scan:
     name: Trivy Image Scan
     if: inputs.run-trivy-scan
     needs: build
     runs-on: ${{ inputs.runs-on }}
     timeout-minutes: 30
-    outputs:
-      trivy-results: trivy-results.sarif
 
     steps:
       - name: Checkout code
@@ -233,7 +235,7 @@ jobs:
         with:
           image-ref: ${{ steps.login-ecr-scan.outputs.registry }}/${{ secrets.ECR_REPOSITORY }}:${{ needs.build.outputs.image-tag }}
           format: sarif
-          output: trivy-results.sarif
+          output: ${{ inputs.trivy-scan-filename }}
           severity: HIGH,CRITICAL
           ignore-unfixed: true
           vuln-type: os,library
@@ -242,7 +244,7 @@ jobs:
       - name: Upload Trivy scan results to GitHub Security tab
         uses: github/codeql-action/upload-sarif@v4
         with:
-          sarif_file: trivy-results.sarif
+          sarif_file: ${{ inputs.trivy-scan-filename }}
           category: trivy
 
   brakeman-scan:
@@ -272,7 +274,7 @@ jobs:
         run: |
           brakeman \
             --format sarif \
-            --output brakeman-results.sarif \
+            --output ${{ inputs.brakeman-scan-filename }} \
             --no-progress \
             --quiet \
             . || EXIT_CODE=$?
@@ -285,7 +287,7 @@ jobs:
         uses: github/codeql-action/upload-sarif@v4
         if: always()
         with:
-          sarif_file: brakeman-results.sarif
+          sarif_file: ${{ inputs.brakeman-scan-filename }}
           category: brakeman
 
   codeql-scan: 
