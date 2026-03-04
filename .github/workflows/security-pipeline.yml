@@ -118,9 +118,6 @@ on:
       image-tag:
         description: 'The full image tag that was built'
         value: ${{ jobs.build.outputs.image-tag }}
-      trivy-results:
-        description: 'Path to Trivy results'
-        value: ${{ jobs.trivy-scan.outputs.trivy-results }}
 
 permissions:
   id-token: write
@@ -209,7 +206,7 @@ jobs:
 
   trivy-scan:
     name: Trivy Image Scan
-    if: inputs.run-trivy-scan
+    if: inputs.run-trivy-scan && inputs.push-image
     needs: build
     runs-on: ${{ inputs.runs-on }}
     timeout-minutes: 30
