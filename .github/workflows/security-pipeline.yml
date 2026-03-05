@@ -1,0 +1,316 @@
+name: Enhanced Reusable Docker Build & Scan
+#########################################################################################################
+### example use
+# name: Build and Deploy
+
+# on:
+#   push:
+#     branches: [main]
+#   pull_request:
+#     branches: [main]
+
+# jobs:
+#   build:
+#     uses: department-of-veterans-affairs/vsp-github-actions/.github/workflows/security-pipeline.yml@main
+#     with:
+#       image-name: MYIMAGENAME
+#       aws-region: us-gov-west-1
+#       run-brakeman-scan: true #useful for ruby
+#       run-codeql-scan: false  #genrally done by default, can be configured for more lang in here.
+#       run-trivy-scan: true 
+#     secrets:
+#       ECR_REPOSITORY: ${{ secrets.ECR_REPOSITORY }}
+#       AWS_ASSUME_ROLE: ${{ vars.AWS_ASSUME_ROLE }}
+#########################################################################################################
+on:
+  workflow_call:
+    inputs:
+      # Image Configuration
+      image-name:
+        description: 'Name of the Docker image (used in tag)'
+        required: true
+        type: string
+      image-tag-prefix:
+        description: 'Prefix for the image tag'
+        required: false
+        type: string
+        default: 'pipeline-'
+      use-branch-tag:
+        description: 'Include branch name in tag'
+        required: false
+        type: boolean
+        default: false
+      dockerfile-path:
+        description: 'Path to Dockerfile'
+        required: false
+        type: string
+        default: 'Dockerfile'
+      build-context:
+        description: 'Docker build context'
+        required: false
+        type: string
+        default: '.'
+      build-args:
+        description: 'Docker build arguments (JSON format)'
+        required: false
+        type: string
+        default: '{}'
+      push-image:
+        description: 'Push image to registry'
+        required: false
+        type: boolean
+        default: true
+
+      # AWS Configuration
+      aws-region:
+        description: 'AWS region for ECR'
+        required: true
+        type: string
+
+      # Scan Configuration
+      run-trivy-scan:
+        description: 'Run Trivy security scan'
+        required: false
+        type: boolean
+        default: true
+      trivy-scan-filename:
+        description: 'trivy scan sarif file name'
+        required: false
+        type: string
+        default: 'trivy-results.sarif'
+      run-brakeman-scan:
+        description: 'Run Brakeman static analysis scan (Ruby/Rails only)'
+        required: false
+        type: boolean
+        default: false
+      brakeman-scan-filename:
+        description: 'brakeman scan sarif file name'
+        required: false
+        type: string
+        default: 'brakeman-results.sarif'  
+      run-codeql-scan:
+        description: 'Run CodeQL static analysis scan'
+        required: false
+        type: boolean
+        default: true
+      codeql-languages:
+        description: 'Comma-separated list of languages for CodeQL (e.g. "ruby,javascript")'
+        required: false
+        type: string
+        default: 'ruby'
+
+      # Runner Configuration
+      runs-on:
+        description: 'Runner to use'
+        required: false
+        type: string
+        default: 'ubuntu-22.04'
+
+    secrets:
+      ECR_REPOSITORY:
+        description: 'ECR Repository name'
+        required: true
+      AWS_ASSUME_ROLE:
+        description: 'AWS IAM role to assume'
+        required: true
+
+    outputs:
+      image-tag:
+        description: 'The full image tag that was built'
+        value: ${{ jobs.build.outputs.image-tag }}
+
+permissions:
+  id-token: write
+  contents: read
+  security-events: write
+  actions: read
+
+jobs:
+  build:
+    name: Build and Push Docker Image
+    runs-on: ${{ inputs.runs-on }}
+    outputs:
+      image-tag: ${{ steps.meta.outputs.image-tag }}
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Generate image metadata
+        id: meta
+        run: |
+          # Generate base tag from SHA
+          SHA_TAG=${GITHUB_SHA::7}
+
+          # Add prefix if provided
+          if [ -n "${{ inputs.image-tag-prefix }}" ]; then
+            TAG="${{ inputs.image-tag-prefix }}${SHA_TAG}"
+          else
+            TAG="$SHA_TAG"
+          fi
+
+          # Add branch name if requested
+          if [ "${{ inputs.use-branch-tag }}" = "true" ]; then
+            BRANCH_NAME=${GITHUB_REF#refs/heads/}
+            BRANCH_NAME=${BRANCH_NAME//\//-}  # Replace / with -
+            TAG="$BRANCH_NAME-$TAG"
+          fi
+
+          # Add PR number if this is a PR
+          if [ "${{ github.event_name }}" = "pull_request" ]; then
+            TAG="pr-${{ github.event.pull_request.number }}-$TAG"
+          fi
+
+          echo "image-tag=$TAG" >> $GITHUB_OUTPUT
+          echo "Generated tag: $TAG"
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          role-to-assume: ${{ secrets.AWS_ASSUME_ROLE }}
+          aws-region: ${{ inputs.aws-region }}
+
+      - name: Login to Amazon ECR
+        id: login-ecr
+        uses: aws-actions/amazon-ecr-login@v2
+
+      - name: Prepare build args
+        id: build-args
+        run: |
+          if [ "${{ inputs.build-args }}" != "{}" ]; then
+            # Safely parse JSON and format for docker/build-push-action
+            BUILD_ARGS=$(printf '%s' '${{ inputs.build-args }}' | jq -r 'to_entries | map("\(.key)=\(.value)") | join("\n")')
+            echo "args<<EOF" >> $GITHUB_OUTPUT
+            echo "$BUILD_ARGS" >> $GITHUB_OUTPUT
+            echo "EOF" >> $GITHUB_OUTPUT
+          else
+            echo "args=" >> $GITHUB_OUTPUT
+          fi
+
+      - name: Build and Push Docker image
+        uses: docker/build-push-action@v5
+        id: docker-build
+        with:
+          context: ${{ inputs.build-context }}
+          file: ${{ inputs.dockerfile-path }}
+          push: ${{ inputs.push-image }}
+          tags: ${{ steps.login-ecr.outputs.registry }}/${{ secrets.ECR_REPOSITORY }}:${{ steps.meta.outputs.image-tag }}
+          build-args: |
+            ${{ steps.build-args.outputs.args }}
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+          outputs: type=image,name=${{ steps.login-ecr.outputs.registry }}/${{ secrets.ECR_REPOSITORY }},name-canonical=true,push=${{ inputs.push-image }}
+
+  trivy-scan:
+    name: Trivy Image Scan
+    if: inputs.run-trivy-scan && inputs.push-image
+    needs: build
+    runs-on: ${{ inputs.runs-on }}
+    timeout-minutes: 30
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Configure AWS Credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          role-to-assume: ${{ secrets.AWS_ASSUME_ROLE }}
+          aws-region: ${{ inputs.aws-region }}
+
+      - name: Login to Amazon ECR
+        id: login-ecr-scan
+        uses: aws-actions/amazon-ecr-login@v2
+        with:
+          mask-password: true
+
+      - name: Run Trivy vulnerability scanner
+        uses: aquasecurity/trivy-action@0.33.1
+        with:
+          image-ref: ${{ steps.login-ecr-scan.outputs.registry }}/${{ secrets.ECR_REPOSITORY }}:${{ needs.build.outputs.image-tag }}
+          format: sarif
+          output: ${{ inputs.trivy-scan-filename }}
+          severity: HIGH,CRITICAL
+          ignore-unfixed: true
+          vuln-type: os,library
+          scanners: vuln
+
+      - name: Upload Trivy scan results to GitHub Security tab
+        uses: github/codeql-action/upload-sarif@v4
+        with:
+          sarif_file: ${{ inputs.trivy-scan-filename }}
+          category: trivy
+
+  brakeman-scan:
+    name: Brakeman SAST Scan
+    if: inputs.run-brakeman-scan
+    runs-on: ${{ inputs.runs-on }}
+    timeout-minutes: 15
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Ruby
+        uses: ruby/setup-ruby@v1
+        with:
+          # Reads .ruby-version if present, otherwise falls back to a safe default
+          ruby-version: '3.3'
+          bundler-cache: false
+
+      - name: Install Brakeman
+        run: gem install brakeman --no-document
+
+      - name: Run Brakeman scan
+        # Exit code 0 = no warnings, 3 = warnings found (still a success for CI
+        # purposes — results are surfaced via SARIF upload below).
+        # Any other non-zero exit code is a genuine failure.
+        run: |
+          brakeman \
+            --format sarif \
+            --output ${{ inputs.brakeman-scan-filename }} \
+            --no-progress \
+            --quiet \
+            . || EXIT_CODE=$?
+          if [ "${EXIT_CODE:-0}" -ne 0 ] && [ "${EXIT_CODE:-0}" -ne 3 ]; then
+            echo "Brakeman exited with unexpected code: $EXIT_CODE"
+            exit $EXIT_CODE
+          fi
+
+      - name: Upload Brakeman results to GitHub Security tab
+        uses: github/codeql-action/upload-sarif@v4
+        if: always()
+        with:
+          sarif_file: ${{ inputs.brakeman-scan-filename }}
+          category: brakeman
+
+  codeql-scan: 
+    name: CodeQL Analysis
+    if: inputs.run-codeql-scan
+    runs-on: ${{ inputs.runs-on }}
+    timeout-minutes: 60
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Initialize CodeQL
+        uses: github/codeql-action/init@v3
+        with:
+          # Accepts a comma-separated list, e.g. "ruby,javascript"
+          languages: ${{ inputs.codeql-languages }}
+      # -----------------------------------------------------------------------
+      # Auto-build works for compiled languages (Java, C/C++, C#, Go, Swift).
+      # For interpreted languages (Ruby, Python, JS/TS) this step is a no-op
+      # and CodeQL traces the source files directly.
+      # -----------------------------------------------------------------------
+      - name: Auto-build
+        uses: github/codeql-action/autobuild@v3
+
+      - name: Perform CodeQL analysis
+        uses: github/codeql-action/analyze@v3
+        with:
+          category: codeql
