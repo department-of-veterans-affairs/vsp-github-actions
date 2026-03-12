@@ -1,6 +1,6 @@
 ## Security Alert Slack Notify
 
-Queries GitHub Advanced Security alerts (code scanning, secret scanning, dependabot) for the current repository and posts a formatted summary to a Slack channel via [Socket Mode](../slack-socket/README.md).
+Queries GitHub Advanced Security alerts (code scanning, secret scanning, dependabot) for the current repository and posts a formatted summary to a Slack channel using [`slackapi/slack-github-action@v2`](https://github.com/slackapi/slack-github-action).
 
 Designed for scheduled workflows so Platform Support has consistent visibility into open security alerts across all Platform repos.
 
@@ -8,11 +8,10 @@ Designed for scheduled workflows so Platform Support has consistent visibility i
 
 | Name | Type | Description | Default | Required |
 |------|------|-------------|---------|----------|
-| github-token | String | Token with `security-events:read` scope for GitHub API calls | | Y |
-| slack-app-token | String | Slack App Token (`xapp-`) for Socket Mode connection | | Y |
-| slack-bot-token | String | Slack Bot User Token (`xoxb-`) for posting messages | | Y |
-| channel-id | String | Slack channel ID to post the alert summary to | | Y |
-| alert-types | String | Comma-separated alert types to check | `code_scanning,secret_scanning,dependabot` | N |
+| github_token | String | Token with `security-events:read` scope for GitHub API calls | | Y |
+| slack_bot_token | String | Slack bot token (`xoxb-`) for posting messages | | Y |
+| channel_id | String | Slack channel ID to post to | | Y |
+| alert_types | String | Comma-separated alert types to check | `code_scanning,secret_scanning,dependabot` | N |
 
 ### Token Permissions
 
@@ -41,7 +40,7 @@ If an alert type's API returns an error (e.g., insufficient token permissions), 
 
 ### Usage
 
-Add a workflow to your repository that runs on a schedule:
+Add a workflow to your repository that runs on a schedule. The AWS credentials and SSM steps follow the patterns already in use in each source repo — adapt to match your repo's existing credential pattern.
 
 ```yaml
 name: Security Alert Notifications
@@ -64,18 +63,10 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
 
-      - name: Configure AWS Credentials
-        uses: aws-actions/configure-aws-credentials@v2
+      - name: Configure AWS credentials
+        uses: ./.github/workflows/configure-aws-credentials
         with:
-          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
-          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-          aws-region: us-gov-west-1
-
-      - name: Get Slack app token
-        uses: department-of-veterans-affairs/action-inject-ssm-secrets@latest
-        with:
-          ssm_parameter: /devops/github_actions_slack_socket_token
-          env_variable_name: SLACK_APP_TOKEN
+          role: ${{ vars.AWS_ASSUME_ROLE }}
 
       - name: Get Slack bot token
         uses: department-of-veterans-affairs/action-inject-ssm-secrets@latest
@@ -86,10 +77,10 @@ jobs:
       - name: Check and notify security alerts
         uses: department-of-veterans-affairs/vsp-github-actions/security-alert-slack-notify@main
         with:
-          github-token: ${{ secrets.GITHUB_TOKEN }}
-          slack-app-token: ${{ env.SLACK_APP_TOKEN }}
-          slack-bot-token: ${{ env.SLACK_BOT_TOKEN }}
-          channel-id: 'CXXXXXXXX'
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          slack_bot_token: ${{ env.SLACK_BOT_TOKEN }}
+          channel_id: 'CXXXXXXXX'
+          alert_types: 'code_scanning,secret_scanning,dependabot'
 ```
 
 ### Checking only specific alert types
@@ -98,11 +89,10 @@ jobs:
       - name: Check code scanning only
         uses: department-of-veterans-affairs/vsp-github-actions/security-alert-slack-notify@main
         with:
-          github-token: ${{ secrets.GITHUB_TOKEN }}
-          slack-app-token: ${{ env.SLACK_APP_TOKEN }}
-          slack-bot-token: ${{ env.SLACK_BOT_TOKEN }}
-          channel-id: 'CXXXXXXXX'
-          alert-types: 'code_scanning'
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          slack_bot_token: ${{ env.SLACK_BOT_TOKEN }}
+          channel_id: 'CXXXXXXXX'
+          alert_types: 'code_scanning'
 ```
 
 ### Limitations

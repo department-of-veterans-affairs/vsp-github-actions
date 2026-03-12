@@ -2,19 +2,16 @@ name: "Security Alert Slack Notify"
 description: "Queries GitHub Advanced Security alerts (code scanning, secret scanning, dependabot) and posts a summary to Slack."
 
 inputs:
-  github-token:
+  github_token:
     required: true
     description: Token with security-events read scope for GitHub API calls
-  slack-app-token:
+  slack_bot_token:
     required: true
-    description: Slack App Token (xapp-) for Socket Mode connection
-  slack-bot-token:
+    description: Slack bot token (xoxb-) for posting messages
+  channel_id:
     required: true
-    description: Slack Bot User Token (xoxb-) for posting messages
-  channel-id:
-    required: true
-    description: Slack channel ID to post the alert summary to
-  alert-types:
+    description: Slack channel ID to post to
+  alert_types:
     required: false
     description: Comma-separated list of alert types to check (code_scanning, secret_scanning, dependabot)
     default: "code_scanning,secret_scanning,dependabot"
@@ -26,18 +23,19 @@ runs:
       id: check-alerts
       shell: bash
       env:
-        GH_TOKEN: ${{ inputs.github-token }}
-        ALERT_TYPES: ${{ inputs.alert-types }}
+        GH_TOKEN: ${{ inputs.github_token }}
+        ALERT_TYPES: ${{ inputs.alert_types }}
       run: |
         chmod +x ${{ github.action_path }}/scripts/check-alerts.sh
         ${{ github.action_path }}/scripts/check-alerts.sh
 
     - name: Post alert summary to Slack
       if: success()
-      uses: department-of-veterans-affairs/vsp-github-actions/slack-socket@main
+      uses: slackapi/slack-github-action@v2
       with:
-        slack_app_token: ${{ inputs.slack-app-token }}
-        slack_bot_token: ${{ inputs.slack-bot-token }}
-        channel_id: ${{ inputs.channel-id }}
-        message: ${{ env.SLACK_FALLBACK_TEXT }}
-        blocks: ${{ env.SLACK_BLOCKS }}
+        method: chat.postMessage
+        token: ${{ inputs.slack_bot_token }}
+        payload: |
+          channel: "${{ inputs.channel_id }}"
+          text: "${{ env.SLACK_FALLBACK_TEXT }}"
+          blocks: ${{ env.SLACK_BLOCKS }}
