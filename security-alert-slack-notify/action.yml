@@ -1,0 +1,41 @@
+name: "Security Alert Slack Notify"
+description: "Queries GitHub Advanced Security alerts (code scanning, secret scanning, dependabot) and posts a summary to Slack."
+
+inputs:
+  github_token:
+    required: true
+    description: Token with security-events read scope for GitHub API calls
+  slack_bot_token:
+    required: true
+    description: Slack bot token (xoxb-) for posting messages
+  channel_id:
+    required: true
+    description: Slack channel ID to post to
+  alert_types:
+    required: false
+    description: Comma-separated list of alert types to check (code_scanning, secret_scanning, dependabot)
+    default: "code_scanning,secret_scanning,dependabot"
+
+runs:
+  using: "composite"
+  steps:
+    - name: Check security alerts and build Slack message
+      id: check-alerts
+      shell: bash
+      env:
+        GH_TOKEN: ${{ inputs.github_token }}
+        ALERT_TYPES: ${{ inputs.alert_types }}
+      run: |
+        chmod +x ${{ github.action_path }}/scripts/check-alerts.sh
+        ${{ github.action_path }}/scripts/check-alerts.sh
+
+    - name: Post alert summary to Slack
+      if: success()
+      uses: slackapi/slack-github-action@v2
+      with:
+        method: chat.postMessage
+        token: ${{ inputs.slack_bot_token }}
+        payload: |
+          channel: "${{ inputs.channel_id }}"
+          text: "${{ env.SLACK_FALLBACK_TEXT }}"
+          blocks: ${{ env.SLACK_BLOCKS }}
