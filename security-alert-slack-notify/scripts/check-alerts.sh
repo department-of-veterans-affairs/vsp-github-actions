@@ -157,7 +157,11 @@ else
     esac
   done
 
-  overview_text=$(IFS=' | '; echo "${overview_parts[*]}")
+  overview_text=""
+  for i in "${!overview_parts[@]}"; do
+    [ "$i" -gt 0 ] && overview_text+=" | "
+    overview_text+="${overview_parts[$i]}"
+  done
   BLOCKS+="{\"type\":\"section\",\"text\":{\"type\":\"mrkdwn\",\"text\":\":bar_chart: *Overview:* ${overview_text}\"}},"
   BLOCKS+="{\"type\":\"divider\"},"
 fi
